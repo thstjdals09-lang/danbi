@@ -40,17 +40,21 @@ const LAYER_ORDER: GearSlot[] = ["jacket", "patch", "pin", "tag", "bag", "headph
 export async function PlayerFigure({ avatar, variant = "full", showCallouts = true, highlight = [], showStage = true }: Props) {
   const family = avatar.originPersona.family;
   const base = avatar.assets[variant].src ? avatar.assets[variant] : avatar.assets.full;
-  const background = avatar.equippedGear.find((g) => g.slot === "background");
-  const layers = avatar.equippedGear
-    .filter((g) => g.slot !== "background" && g.overlay.src)
-    .sort((a, b) => LAYER_ORDER.indexOf(a.slot) - LAYER_ORDER.indexOf(b.slot));
+  // 기어 레이어는 full.webp 캔버스 기준으로 제작되므로, 기본 레이어가 full 일 때만 겹친다.
+  const baseIsFull = base === avatar.assets.full;
+  const background = baseIsFull ? avatar.equippedGear.find((g) => g.slot === "background" && g.overlay.src) : undefined;
+  const layers = baseIsFull
+    ? avatar.equippedGear
+        .filter((g) => g.slot !== "background" && g.overlay.src)
+        .sort((a, b) => LAYER_ORDER.indexOf(a.slot) - LAYER_ORDER.indexOf(b.slot))
+    : [];
 
   return (
     <div className="figure" style={{ "--accent": family.accent } as CSSProperties}>
       <div className="figure__frame">
-        {background?.icon.src && (
+        {background?.overlay.src && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="figure__layer" src={background.icon.src} alt="" aria-hidden />
+          <img className="figure__layer" src={background.overlay.src} alt="" aria-hidden />
         )}
         <AssetSlot asset={base} alt={`${family.name} — ${avatar.currentIdentity.name}`} mark={family.name} label={`${variant.toUpperCase()} · ${family.name}`} />
         {layers.map((g) => (

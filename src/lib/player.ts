@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { certificationAsset, gearAsset, personaAsset, trophyAsset } from "@/lib/assets";
+import { certificationAsset, gearIcon, gearOverlay, personaAsset, trophyAsset } from "@/lib/assets";
 import type {
   AvatarState,
   Certification,
@@ -27,7 +27,7 @@ import { getUserByHandle, type User } from "@/lib/repo/users";
 
 export { formatDate };
 
-function toGearItem(id: string): GearItem | null {
+function toGearItem(id: string, familyId: string): GearItem | null {
   const def = getGear(id);
   if (!def) return null;
   return {
@@ -36,8 +36,8 @@ function toGearItem(id: string): GearItem | null {
     slot: def.slot,
     slotLabel: SLOT_LABEL[def.slot],
     tier: def.tier,
-    icon: gearAsset(def.id, "icon"),
-    overlay: gearAsset(def.id, "overlay"),
+    icon: gearIcon(def.id),
+    overlay: gearOverlay(def.id, familyId),
   };
 }
 
@@ -61,8 +61,8 @@ export function buildAvatarState(user: User, owned: Collectible[]): AvatarState 
     originPersona: persona,
     currentIdentity: identityOf(user, persona),
     careerStage: stageFor(certCount),
-    equippedGear: gear.filter((g) => g.equipped).map((g) => toGearItem(g.key)).filter((g) => g !== null),
-    unlockedGear: gear.map((g) => toGearItem(g.key)).filter((g) => g !== null),
+    equippedGear: gear.filter((g) => g.equipped).map((g) => toGearItem(g.key, family)).filter((g) => g !== null),
+    unlockedGear: gear.map((g) => toGearItem(g.key, family)).filter((g) => g !== null),
     cosmetics: [],
     assets: {
       full: personaAsset(family, "full"),
@@ -151,7 +151,7 @@ export function buildCollection(
       rarity: { tier: def.tier, ownedPercent: ownedPercent("gear", def.id) },
       difficulty: def.difficulty,
       earnedAt: row?.earnedAt ?? null,
-      image: gearAsset(def.id, "icon"),
+      image: gearIcon(def.id),
       isOwned: Boolean(row),
       isEquipped: Boolean(row?.equipped),
       isShowcased: showcased(row?.id ?? null),
@@ -202,7 +202,7 @@ export function buildCertifications(
       rarity: { tier: null, ownedPercent: ownedPercent("certification", exam.id) },
       difficulty: exam.difficulty,
       earnedAt: row?.updatedAt ?? null,
-      image: certificationAsset(exam.id),
+      image: certificationAsset(exam.id, row?.grade ?? null),
       isOwned: Boolean(row),
       isEquipped: false,
       isShowcased: row ? showcaseIds.includes(row.id) : false,

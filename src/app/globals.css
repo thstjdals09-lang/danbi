@@ -416,6 +416,8 @@ h1, h2, h3, h4, p { margin: 0; }
   object-fit: cover;
   object-position: center top;
 }
+/* 기본 캐릭터와 기어 레이어는 반드시 같은 기준(상단 중앙)으로 잘려야 정렬이 맞는다 */
+.figure .asset img { object-position: center top; }
 .figure__accent {
   position: absolute;
   left: 0;

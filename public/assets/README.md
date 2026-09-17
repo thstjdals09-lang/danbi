@@ -34,17 +34,21 @@
 
 | 파일 | 용도 |
 | --- | --- |
-| `icon.webp` | Collection / Showcase 오브젝트 이미지 (1:1) |
-| `overlay.webp` | `full.webp`와 **같은 캔버스 크기**의 투명 레이어. 장착 시 캐릭터 위에 겹쳐집니다 |
+| `icon.webp` | Collection / Showcase / Result 오브젝트 이미지 (1:1, 투명) |
+| `overlay-{family}.webp` | 해당 계열 `full.webp`와 **같은 캔버스(1600×2000)** 의 투명 레이어. 장착 시 캐릭터 위에 겹쳐집니다 |
+| `overlay.webp` | 계열별 파일이 없을 때 쓰는 공용 레이어 (시그니처 기어·배경 기어용) |
 
-배경 기어(`academy-hall`, `final-table-light`)는 `icon.webp`가 캐릭터 뒤 배경으로 깔립니다.
+- 계열마다 체형/포즈가 달라 공용 기어(tag, pin, patch, headphones, protector)는 `overlay-architect|shark|strategist|hunter` 4장이 필요합니다.
+- 배경 기어(`academy-hall`, `final-table-light`)는 `overlay.webp`가 캐릭터 **뒤**에 깔립니다 (불투명 1600×2000).
+- 레이어는 `full.webp` 위에서만 겹쳐집니다. 캐릭터와 레이어는 모두 **상단 중앙 기준**으로 잘립니다.
 
 gearId: `academy-player-tag`, `academy-hall`, `rulebook-pin`, `40bb-tournament-patch`, `grinder-headphones`,
 `graphite-card-protector`, `final-table-light`, `architect-halo`, `shark-visor`, `strategist-goggles`, `hunter-hood`
 
-## Certifications — `certifications/{examId}.webp`
+## Certifications — `certifications/{examId}/{grade}.webp`
 
-메달 오브젝트를 대체하는 이미지. 없으면 CSS 재질(샴페인 포일 / 코발트·버건디 에나멜 / 퓨터)로 표시됩니다.
+메달 완성 이미지. 등급 글자가 그림에 포함되므로 등급별 파일이 필요합니다: `S`, `A`, `B`, `C`, `locked`(미획득).
+육각형(가로:세로 = 1:1.12)으로 잘려 표시됩니다. 없으면 CSS 재질(샴페인 포일 / 코발트·버건디 에나멜 / 퓨터)로 표시됩니다.
 
 examId: `basic-terms`, `preflop-40bb`
 
