@@ -63,8 +63,9 @@ export function toPublicExam(exam: Exam, includeDevAnswers: boolean): PublicExam
       category: q.category,
       prompt: q.prompt,
       choices: q.choices,
-      spot: q.kind === "spot" ? q.spot : undefined,
-      devCorrect: includeDevAnswers ? correctChoiceOf(q) : undefined,
+      ...(q.kind === "spot" ? { spot: q.spot } : {}),
+      // 개발자 모드가 아니면 키 자체를 넣지 않는다.
+      ...(includeDevAnswers ? { devCorrect: correctChoiceOf(q) } : {}),
     })),
   };
 }
