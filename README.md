@@ -79,6 +79,14 @@ DB 파일은 `data/danbi.db`에 자동 생성됩니다. 커밋되지 않습니�
 캐릭터는 CSS/SVG로 그리지 않습니다. `public/assets`에 외부 제작 에셋을 넣으면 슬롯이 채워집니다.
 경로 규칙: [public/assets/README.md](public/assets/README.md)
 
+```bash
+npm run assets:check            # 제출 현황 + 파일명·해상도·비율·투명 채널 검사
+npm run assets:check -- --todo  # 아직 없는 파일 목록
+npm run assets:init             # 폴더 구조 다시 만들기
+```
+
+실행 중인 프로덕션 서버에도 새로 넣은 이미지가 바로 보입니다(`/assets/[...path]` 라우트가 빌드 이후 추가된 파일을 서빙).
+
 캐릭터는 단일 PNG가 아니라 `AvatarState`로 조립됩니다.
 
 ```

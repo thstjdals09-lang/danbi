@@ -5,6 +5,18 @@
 
 확장자는 `.webp` → `.png` → `.jpg` 순서로 찾습니다.
 
+## 이미지 넣는 방법
+
+1. 완성 파일을 아래 경로 규칙 그대로 이 폴더(`public/assets/…`)에 넣습니다. 폴더는 이미 만들어져 있습니다.
+2. 검사: `npm run assets:check` — 파일명(대소문자 포함)·해상도·비율·투명 채널·파일 크기와 목록에 없는 파일(오타)을 확인합니다.
+3. 남은 파일 보기: `npm run assets:check -- --todo`
+4. 화면에 연결된 슬롯은 서버를 다시 시작하지 않아도 바로 반영됩니다.
+
+- 기준 목록(105 파일)은 `scripts/asset-manifest.mjs`에 있습니다. 규격이 바뀌면 이 파일을 먼저 고칩니다.
+- 검사 결과에 `(화면 연결 전 — 수집만)`으로 표시되는 파일은 아직 코드 슬롯이 없는 제안 항목입니다(hero, og, brand, share, ui, backgrounds, persona-test/silhouette). 파일은 먼저 모아두고 화면 연결은 이후 작업입니다.
+- 웹용 최종본만 넣습니다. PSD·고해상도 마스터는 이 폴더에 넣지 마세요(공개 저장소 · 저장소 용량).
+- 이 폴더의 이미지는 GitHub(공개 저장소)에 커밋됩니다.
+
 ## Personas — `personas/{family}/`
 
 | family | 이름 | accent |
