@@ -108,3 +108,8 @@ input, select {
 
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); font-size: 14px; }
+
+.dev-fab {
+  position: fixed; right: 16px; bottom: 16px; z-index: 50;
+  background: #1b1330; font-size: 13px; padding: 8px 12px;
+}

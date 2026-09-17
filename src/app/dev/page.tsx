@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { assertDevMode } from "@/lib/dev";
+import { assertDevAccess } from "@/lib/dev";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listUsers } from "@/lib/repo/users";
 import { getExamSource, listExamSourceIds } from "@/lib/exams/registry";
@@ -17,7 +17,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function DevPanelPage() {
-  assertDevMode();
+  await assertDevAccess();
   const me = await getCurrentUser();
   const users = listUsers();
   const source = getExamSource();
@@ -29,7 +29,7 @@ export default async function DevPanelPage() {
         <p className="eyebrow" style={{ color: "var(--dev)" }}>Developer Mode</p>
         <h1>개발자 패널</h1>
         <p className="muted">
-          DANBI_DEV_MODE=true 일 때만 존재하는 페이지입니다. 문제 소스: <code>{source.id}</code>{" "}
+          DANBI_DEV_MODE=true 이고 비밀번호로 잠금 해제한 브라우저에서만 열립니다. 문제 소스: <code>{source.id}</code>{" "}
           (사용 가능: {listExamSourceIds().join(", ")})
         </p>
       </div>

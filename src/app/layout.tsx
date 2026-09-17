@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { APP_NAME, TAGLINE, isDevMode } from "@/lib/config";
+import { APP_NAME, TAGLINE, isDevModeEnabled } from "@/lib/config";
+import { isDevUnlocked } from "@/lib/dev";
 import { getCurrentUser } from "@/lib/auth/session";
 import { logoutAction } from "@/app/(auth)/actions";
+import { lockDevAction } from "@/app/dev/actions";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,7 +14,8 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
-  const devMode = isDevMode();
+  const devEnabled = isDevModeEnabled();
+  const devUnlocked = await isDevUnlocked();
 
   return (
     <html lang="ko">
@@ -38,11 +41,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </nav>
         </header>
         <main className="container">{children}</main>
-        {devMode && (
+        {devEnabled && !devUnlocked && (
+          <Link href="/dev/unlock" className="btn btn-dev dev-fab">개발자 모드</Link>
+        )}
+        {devUnlocked && (
           <div className="devbar">
             <strong>DEV MODE</strong>
             <span>{user ? `#${user.id} ${user.email}` : "로그인 안 됨"}</span>
             <Link href="/dev">개발자 패널</Link>
+            <form action={lockDevAction} style={{ marginLeft: "auto" }}>
+              <button className="btn btn-dev" type="submit" style={{ padding: "4px 10px" }}>잠그기</button>
+            </form>
           </div>
         )}
       </body>
