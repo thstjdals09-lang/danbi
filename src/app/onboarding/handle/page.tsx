@@ -1,22 +1,40 @@
+import type { CSSProperties } from "react";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getPendingPersona } from "@/lib/onboarding";
+import { previewAvatarState } from "@/lib/player";
 import { getPersona } from "@/content/personas";
+import { PlayerFigure } from "@/components/PlayerFigure";
 import { IdentityForm } from "./IdentityForm";
 
-export default async function HandlePage() {
-  const user = await requireUser();
-  const persona = getPersona(user.personaId);
+export const metadata = { title: "Player Name — POKER PLAYER GROW" };
+
+export default async function HandlePage({ searchParams }: { searchParams: Promise<{ nickname?: string }> }) {
+  const user = await getCurrentUser();
+  if (user?.handle) redirect("/");
+  const persona = user?.personaId ? getPersona(user.personaId) : await getPendingPersona();
   if (!persona) redirect("/onboarding/persona");
-  if (user.handle) redirect("/");
+
+  const { nickname = "" } = await searchParams;
+  const avatar = previewAvatarState(persona);
 
   return (
-    <div className="stack">
-      <div>
-        <p className="eyebrow">{persona.title}</p>
-        <h1>플레이어 이름을 정하세요</h1>
-        <p className="muted">공개 ID는 나의 공개 프로필 주소가 됩니다. 나중에 Instagram bio 등에 걸 수 있어요.</p>
+    <section className="shell auth" style={{ "--accent": persona.family.accent } as CSSProperties}>
+      <div className="auth__form">
+        <div>
+          <p className="eyebrow">{persona.family.name} · Player passport</p>
+          <h1 className="display" style={{ fontSize: "clamp(44px, 5vw, 72px)", marginTop: 18 }}>
+            Name your player.
+          </h1>
+          <p className="muted" style={{ marginTop: 18, fontSize: 14, lineHeight: 1.8 }}>
+            공개 ID는 당신의 플레이어 주소가 됩니다. Instagram bio에 걸어도 좋은 이름으로.
+          </p>
+        </div>
+        <IdentityForm needsAccount={!user} initialNickname={nickname.slice(0, 16)} />
       </div>
-      <IdentityForm />
-    </div>
+      <div className="auth__figure">
+        <PlayerFigure avatar={avatar} variant="bust" showCallouts={false} showStage={false} />
+      </div>
+    </section>
   );
 }

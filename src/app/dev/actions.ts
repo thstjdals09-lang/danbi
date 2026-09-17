@@ -11,9 +11,12 @@ import {
   createUser,
   getUserById,
   isHandleTaken,
+  overridePersonaForDev,
+  setIdentity,
   setPersona,
   setProfileIdentity,
 } from "@/lib/repo/users";
+import { getIdentity } from "@/content/identities";
 import { resetProgress } from "@/lib/repo/collection";
 import { insertAttempt } from "@/lib/repo/attempts";
 import { applyExamResult } from "@/lib/progress";
@@ -68,12 +71,21 @@ export async function devResetProgressAction(): Promise<void> {
   redirect("/dev");
 }
 
-/** 현재 Persona 만 바꾼다. (Origin 은 유지되어 성향 변화 표시를 테스트할 수 있다) */
+/** 개발자 전용: Origin Persona 자체를 바꿔 계열별 화면을 확인한다. (실서비스에서는 Origin 이 바뀌지 않는다) */
 export async function devSetPersonaAction(formData: FormData): Promise<void> {
   await assertDevAccess();
   const user = await requireUser();
   const persona = getPersona(String(formData.get("personaId")));
-  if (persona) setPersona(user.id, persona.id);
+  if (persona) overridePersonaForDev(user.id, persona.id);
+  redirect("/dev");
+}
+
+/** 개발자 전용: Current Identity 를 직접 지정한다. (다음 시험 결과 반영 시 규칙대로 다시 계산된다) */
+export async function devSetIdentityAction(formData: FormData): Promise<void> {
+  await assertDevAccess();
+  const user = await requireUser();
+  const id = String(formData.get("identityId") ?? "");
+  setIdentity(user.id, getIdentity(id) ? id : null);
   redirect("/dev");
 }
 
@@ -88,7 +100,7 @@ export async function devGrantCertificationAction(formData: FormData): Promise<v
   const score = GRADE_SCORES[grade];
   if (!exam || score === undefined) redirect("/dev");
 
-  const rewards = applyExamResult(user.id, exam.id, score, grade);
+  const rewards = applyExamResult(user, exam.id, score, grade);
   const attemptId = insertAttempt(user.id, exam.id, score, grade, [], rewards);
   redirect(`/exams/result/${attemptId}`);
 }

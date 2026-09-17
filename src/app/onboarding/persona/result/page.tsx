@@ -1,42 +1,111 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth/session";
-import { getPersona } from "@/content/personas";
-import { GROWTH_STAGES } from "@/content/growth";
-import { characterImage, pfpImage } from "@/lib/images";
-import { ImageSlot } from "@/components/ImageSlot";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getPendingPersona } from "@/lib/onboarding";
+import { previewAvatarState } from "@/lib/player";
+import { personaAsset } from "@/lib/assets";
+import { FAMILIES, FAMILY_ORDER, getPersona } from "@/content/personas";
+import { PlayerFigure } from "@/components/PlayerFigure";
+import { AssetSlot } from "@/components/AssetSlot";
+import { Pfp } from "@/components/Pfp";
+import { ShareActions } from "@/components/ShareActions";
 import { retakePersonaAction } from "../../actions";
 
-export default async function PersonaResultPage() {
-  const user = await requireUser();
-  const persona = getPersona(user.personaId);
+export const metadata = { title: "Your Player — POKER PLAYER GROW" };
+
+/** 제품에서 가장 중요한 장면: "이게 내 포커 플레이어다." */
+export default async function PersonaRevealPage() {
+  const user = await getCurrentUser();
+  const persona = user?.personaId ? getPersona(user.personaId) : await getPendingPersona();
   if (!persona) redirect("/onboarding/persona");
 
-  const stage = GROWTH_STAGES[0];
+  const avatar = previewAvatarState(persona);
+  const family = persona.family;
+  const onboarded = Boolean(user?.handle);
 
   return (
-    <div className="stack" style={{ alignItems: "center", textAlign: "center" }}>
-      <p className="eyebrow">Your Starting Persona</p>
-      <ImageSlot image={characterImage(persona.id, stage.id)} alt={persona.title} width={280} height={360} label="캐릭터 이미지" />
-      <h1>{persona.title}</h1>
-      <p className="muted" style={{ maxWidth: 480 }}>{persona.description}</p>
+    <div style={{ "--accent": family.accent } as CSSProperties}>
+      <section className="shell reveal">
+        <div className="reveal__copy">
+          <p className="eyebrow">Your player is</p>
+          <div>
+            <h1 className="display reveal__name">{family.name}</h1>
+            <p className="meta" style={{ marginTop: 18 }}>{persona.variant}</p>
+          </div>
 
-      <div className="card stack" style={{ alignItems: "center" }}>
-        <p className="eyebrow">PFP</p>
-        <ImageSlot image={pfpImage(persona.id, stage.id)} alt={`${persona.title} PFP`} width={120} height={120} label="PFP" />
-        <p className="muted" style={{ fontSize: 13 }}>프로필 사진으로 쓸 수 있는 이미지</p>
-      </div>
+          <p className="reveal__desc">{family.description}</p>
+          <p className="quote">“{family.line}”</p>
 
-      {user.handle ? (
-        <Link href="/" className="btn btn-primary">홈으로</Link>
-      ) : (
-        <div className="row" style={{ justifyContent: "center" }}>
-          <Link href="/onboarding/handle" className="btn btn-primary">이 플레이어로 시작하기</Link>
-          <form action={retakePersonaAction}>
-            <button type="submit" className="btn">다시 테스트</button>
-          </form>
+          <div className="reveal__actions">
+            {onboarded ? (
+              <Link href="/" className="btn">
+                My player <span className="arrow">→</span>
+              </Link>
+            ) : (
+              <form action="/onboarding/handle" method="get" style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+                <div className="field">
+                  <label htmlFor="reveal-name">Set player name</label>
+                  <input id="reveal-name" name="nickname" maxLength={16} placeholder="RiverMind" autoComplete="nickname" />
+                </div>
+                <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                  <button type="submit" className="btn">
+                    Continue <span className="arrow">→</span>
+                  </button>
+                  <button type="submit" formAction={retakePersonaAction} formMethod="post" className="link link--mute">
+                    Retake
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
-      )}
+
+        <div className="reveal__figure">
+          <PlayerFigure avatar={avatar} variant="reveal" showCallouts={false} showStage={false} />
+
+          <ul className="keyword-list reveal__keywords">
+            {persona.keywords.map((k) => (
+              <li key={k}>{k}</li>
+            ))}
+          </ul>
+
+          <div className="reveal__side">
+            <div className="pfp-preview">
+              <span className="eyebrow eyebrow--ink">PFP preview</span>
+              <Pfp avatar={avatar} size={72} name={family.name.replace("THE ", "")} />
+            </div>
+            <ShareActions
+              title="POKER PLAYER GROW"
+              text={`My poker player is ${family.name}. ${family.line}`}
+              saveSrc={avatar.assets.pfp.src}
+              saveName={`${family.id}-pfp`}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="shell">
+        <div className="family-strip">
+          {FAMILY_ORDER.map((id) => {
+            const f = FAMILIES[id];
+            const current = id === family.id;
+            return (
+              <div
+                key={id}
+                className={`family-strip__item${current ? " is-current" : ""}`}
+                style={{ "--accent": f.accent } as CSSProperties}
+              >
+                <div className="family-strip__thumb">
+                  <AssetSlot asset={personaAsset(id, "bust")} alt={f.name} mark={f.name.replace("THE ", "")} label="Bust" compact />
+                </div>
+                <span className="eyebrow eyebrow--ink">{f.name}</span>
+                <span className="eyebrow">{f.keywords.join(" · ")}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }

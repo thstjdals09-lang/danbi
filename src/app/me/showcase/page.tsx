@@ -1,42 +1,74 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireOnboardedUser } from "@/lib/auth/session";
-import { describeCollectibles } from "@/lib/career";
-import { SHOWCASE_SLOTS, getShowcase, listCollectibles } from "@/lib/repo/collection";
-import { CollectibleCard } from "@/components/CollectibleCard";
+import { getPlayerSnapshot } from "@/lib/player";
+import { CollectionObject } from "@/components/CollectionObject";
 import { ShowcaseEditor } from "./ShowcaseEditor";
 
+export const metadata = { title: "My Room — POKER PLAYER GROW" };
+
+/** Collection(가진 모든 것)과 구분되는 Showcase(보여주고 싶은 것) 편집 */
 export default async function ShowcasePage() {
   const user = await requireOnboardedUser();
-  const collection = await describeCollectibles(listCollectibles(user.id));
-  const slots = getShowcase(user.id).map((c) => c?.id ?? null);
+  const player = await getPlayerSnapshot(user);
+  if (!player) redirect("/onboarding/handle");
+
+  const owned = player.collection.filter((i) => i.isOwned && i.ownedId !== null);
 
   return (
-    <div className="stack">
-      <div>
-        <p className="eyebrow">Showcase</p>
-        <h1>무엇을 가장 자랑하고 싶나요?</h1>
-        <p className="muted">
-          Collection {collection.length} · Showcase {SHOWCASE_SLOTS} Slots — 선택한 수집물만 공개 프로필에 전시됩니다.
-        </p>
-      </div>
-
-      {collection.length === 0 ? (
-        <div className="card">
-          <p className="muted">아직 수집물이 없습니다. Academy에서 첫 인증을 획득하세요.</p>
+    <div className="shell">
+      <header className="page-head">
+        <div>
+          <p className="eyebrow">My room · Showcase</p>
+          <h1 className="display page-head__title">What do you show?</h1>
         </div>
-      ) : (
-        <ShowcaseEditor
-          slots={slots}
-          options={collection.map((c) => ({ id: c.id, label: `${c.name}${c.grade ? ` (${c.grade})` : ""}` }))}
-        />
-      )}
-
-      <section className="stack">
-        <h2>Collection</h2>
-        <div className="grid">
-          {collection.map((item) => (
-            <CollectibleCard key={item.id} item={item} />
-          ))}
+        <div style={{ textAlign: "right" }}>
+          <p className="meta">
+            Collection {owned.length} · Showcase {player.showcase.capacity} slots
+          </p>
+          <Link href={`/${player.handle}`} className="link" style={{ marginTop: 12 }}>
+            View public profile →
+          </Link>
         </div>
+      </header>
+
+      <section className="section">
+        <div className="proofs">
+          {player.showcase.slots.map((item, i) =>
+            item ? (
+              <div key={item.id} className="proof">
+                <span className="eyebrow">0{i + 1}</span>
+                <CollectionObject item={item} size="md" />
+                <span className="proof__name">{item.name}</span>
+              </div>
+            ) : (
+              <div key={`empty-${i}`} className="proof">
+                <span className="eyebrow">0{i + 1}</span>
+                <span className="proof__empty" style={{ width: 104, height: 116 }} />
+                <span className="eyebrow">Empty</span>
+              </div>
+            ),
+          )}
+        </div>
+      </section>
+
+      <section className="section">
+        {owned.length === 0 ? (
+          <div className="notice">
+            아직 전시할 수집물이 없습니다.{" "}
+            <Link href="/exams" className="link">
+              첫 증명 시작하기
+            </Link>
+          </div>
+        ) : (
+          <ShowcaseEditor
+            slots={player.showcase.slots.map((s) => s?.ownedId ?? null)}
+            options={owned.map((c) => ({
+              id: c.ownedId as number,
+              label: `${c.name}${c.grade ? ` — ${c.grade}` : ""} · ${c.type.toUpperCase()}`,
+            }))}
+          />
+        )}
       </section>
     </div>
   );

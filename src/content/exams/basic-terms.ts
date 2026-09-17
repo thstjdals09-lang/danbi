@@ -11,6 +11,8 @@ export const basicTermsExam: Exam = {
   skill: "Terminology",
   description: "포지션, 액션, 핸드 표기 등 포커 테이블에서 쓰이는 기본 용어를 이해하고 있는지 확인합니다.",
   difficulty: 1,
+  scope: ["Fundamentals", "Terminology"],
+  certification: { name: "Poker Language", code: "FUNDAMENTALS" },
   questions: [
     {
       id: "bt-01",

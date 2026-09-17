@@ -18,6 +18,11 @@ export function isBetterGrade(a: Grade, b: Grade | null | undefined): boolean {
   return RANK[a] > (b ? RANK[b as Grade] ?? -1 : -1);
 }
 
+/** actual 이 minimum 이상인가 (actual 이 없으면 false) */
+export function meetsGrade(actual: Grade | null | undefined, minimum: Grade): boolean {
+  return actual ? RANK[actual] >= RANK[minimum] : false;
+}
+
 export function isPassing(grade: Grade): boolean {
   return grade !== "F";
 }
@@ -56,6 +61,8 @@ export function toPublicExam(exam: Exam, includeDevAnswers: boolean): PublicExam
     skill: exam.skill,
     description: exam.description,
     difficulty: exam.difficulty,
+    scope: exam.scope,
+    certification: exam.certification,
     studyResources: exam.studyResources,
     questions: exam.questions.map((q) => ({
       id: q.id,

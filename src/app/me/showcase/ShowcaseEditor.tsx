@@ -12,27 +12,27 @@ export function ShowcaseEditor({ slots, options }: Props) {
   const [state, formAction, pending] = useActionState<ShowcaseFormState, FormData>(saveShowcaseAction, {});
 
   return (
-    <form action={formAction} className="card stack">
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+    <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "28px 40px" }}>
         {slots.map((current, slot) => (
-          <label key={slot}>
-            Slot {slot + 1}
-            <select name={`slot-${slot}`} defaultValue={current ?? ""}>
-              <option value="">— 비워두기 —</option>
+          <div key={slot} className="field">
+            <label htmlFor={`slot-${slot}`}>Slot 0{slot + 1}</label>
+            <select id={`slot-${slot}`} name={`slot-${slot}`} defaultValue={current ?? ""}>
+              <option value="">— Empty —</option>
               {options.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.label}
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         ))}
       </div>
-      <div className="row">
-        <button type="submit" className="btn btn-primary" disabled={pending}>
-          쇼케이스 저장
+      <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+        <button type="submit" className="btn" disabled={pending}>
+          Save showcase
         </button>
-        {state.saved && <span className="muted">저장되었습니다. (같은 수집물은 한 슬롯에만 전시됩니다)</span>}
+        {state.saved && <span className="eyebrow">Saved · 같은 수집물은 한 슬롯에만 전시됩니다</span>}
       </div>
     </form>
   );

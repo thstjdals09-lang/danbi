@@ -5,7 +5,13 @@ import type { Grade, QuestionResult } from "@/lib/exams/grading";
 export type Rewards = {
   certification?: { status: "new" | "upgraded" | "kept"; grade: Grade; previousGrade?: Grade | null };
   trophies: string[];
+  /** 새로 획득한 기어 id (예전 기록에는 없을 수 있다) */
+  gear?: string[];
+  /** 새로 획득했고 자동 장착된 기어 id */
+  equipped?: string[];
   stage?: { from: string; to: string };
+  identity?: { from: string | null; to: string | null };
+  level?: { from: number; to: number };
 };
 
 export type Attempt = {

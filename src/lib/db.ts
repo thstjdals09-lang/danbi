@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   handle              TEXT UNIQUE,
   persona_id          TEXT,
   origin_persona_id   TEXT,
+  identity_id         TEXT,
   created_at          TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -34,7 +35,7 @@ CREATE TABLE IF NOT EXISTS exam_attempts (
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- 수집물: 인증서, 트로피 등. (user, kind, key) 당 하나.
+-- 수집물: 인증서, 트로피, 기어 등. (user, kind, key) 당 하나.
 CREATE TABLE IF NOT EXISTS collectibles (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -42,6 +43,8 @@ CREATE TABLE IF NOT EXISTS collectibles (
   key         TEXT NOT NULL,
   grade       TEXT,
   score       INTEGER,
+  source      TEXT,
+  equipped    INTEGER NOT NULL DEFAULT 0,
   earned_at   TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (user_id, kind, key)
@@ -58,6 +61,9 @@ CREATE TABLE IF NOT EXISTS showcase_slots (
 /** 이미 만들어진 DB 에 나중에 추가된 컬럼을 붙인다. */
 const COLUMN_MIGRATIONS: { table: string; column: string; definition: string }[] = [
   { table: "exam_attempts", column: "rewards", definition: "TEXT NOT NULL DEFAULT '{}'" },
+  { table: "users", column: "identity_id", definition: "TEXT" },
+  { table: "collectibles", column: "source", definition: "TEXT" },
+  { table: "collectibles", column: "equipped", definition: "INTEGER NOT NULL DEFAULT 0" },
 ];
 
 function migrate(conn: DatabaseSync): void {

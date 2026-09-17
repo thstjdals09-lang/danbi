@@ -19,7 +19,7 @@ export async function submitExamAction(examId: string, answers: Record<string, s
   );
 
   const { score, grade, results } = gradeExam(exam, cleaned);
-  const rewards = applyExamResult(user.id, exam.id, score, grade);
+  const rewards = applyExamResult(user, exam.id, score, grade);
   const attemptId = insertAttempt(user.id, exam.id, score, grade, results, rewards);
 
   redirect(`/exams/result/${attemptId}`);

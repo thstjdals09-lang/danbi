@@ -10,5 +10,5 @@ export function isDevModeEnabled(): boolean {
   return process.env.DANBI_DEV_MODE === "true";
 }
 
-export const APP_NAME = "danbi";
+export const APP_NAME = "POKER PLAYER GROW";
 export const TAGLINE = "PLAY. PROVE. BECOME.";

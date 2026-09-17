@@ -23,17 +23,42 @@ export type TermQuestion = QuestionBase & {
   answer: string;
 };
 
-/** 실전 스팟 문제 (추후 사용). 혼합 전략을 빈도로 표현한다. */
+/** 테이블의 한 자리 */
+export type SpotSeat = {
+  position: string; // 예: "HJ"
+  stackBb: number; // 현재 남은 스택
+  /** 이 핸드에서 이 자리가 팟에 넣은 칩 (블라인드 포함) */
+  investedBb?: number;
+  status: "hero" | "folded" | "active" | "waiting";
+};
+
+export type SpotAction = {
+  position: string;
+  action: "Fold" | "Call" | "Raise" | "3Bet" | "4Bet" | "All-in" | "Limp" | "Check";
+  toBb?: number;
+};
+
+/** 실전 스팟 문제. 혼합 전략을 빈도로 표현한다. */
 export type SpotQuestion = QuestionBase & {
   kind: "spot";
   spot: {
     game: "MTT" | "Cash";
     table: string; // 예: "8-Max"
-    stackBb: number;
+    stackBb: number; // 유효 스택
+    model?: string; // 예: "ChipEV"
+    street?: string; // 예: "Preflop"
+    anteBb?: number; // 예: BB ante 1
     heroPosition: string; // 예: "BTN"
     situation: string; // 예: "vs CO RFI"
     hand: string; // 예: "A5s"
+    /** 예: ["As", "5s"] (rank + suit s/h/d/c) */
+    heroCards?: [string, string];
     villainSizing?: string; // 예: "2.2BB"
+    /** 시계 방향 좌석 순서 */
+    seats?: SpotSeat[];
+    /** 히어로 차례까지의 액션 */
+    actions?: SpotAction[];
+    potBb?: number;
   };
   /** choice id → 전략 빈도(0~1). 합은 1. */
   strategy: Record<string, number>;
@@ -50,6 +75,10 @@ export type Exam = {
   skill: string;
   description: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
+  /** 시험 범위 표기. 예: ["MTT", "8-Max", "40BB", "ChipEV", "Preflop"] */
+  scope: string[];
+  /** 합격 시 받는 인증 */
+  certification: { name: string; code: string };
   questions: Question[];
   studyResources?: { title: string; url: string }[];
 };

@@ -1,56 +1,97 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Cormorant_Garamond, Inter, Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import { APP_NAME, TAGLINE, isDevModeEnabled } from "@/lib/config";
 import { isDevUnlocked } from "@/lib/dev";
 import { getCurrentUser } from "@/lib/auth/session";
+import { buildAvatarState } from "@/lib/player";
+import { listCollectibles } from "@/lib/repo/collection";
 import { logoutAction } from "@/app/(auth)/actions";
 import { lockDevAction } from "@/app/dev/actions";
+import { SiteNav } from "@/components/SiteNav";
+import { Pfp } from "@/components/Pfp";
 import "./globals.css";
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const notoSansKr = Noto_Sans_KR({ subsets: ["latin"], variable: "--font-noto-sans-kr", display: "swap", preload: false });
+const notoSerifKr = Noto_Serif_KR({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-noto-serif-kr",
+  display: "swap",
+  preload: false,
+});
 
 export const metadata: Metadata = {
   title: `${APP_NAME} — ${TAGLINE}`,
-  description: "실제 포커 실력을 시험으로 증명하며 나만의 포커 플레이어를 성장시키는 웹게임",
+  description: "실력으로 증명하고, 캐릭터와 커리어로 성장하는 포커 플레이어 아이덴티티 게임.",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   const devEnabled = isDevModeEnabled();
   const devUnlocked = await isDevUnlocked();
+  const avatar = user?.handle ? buildAvatarState(user, listCollectibles(user.id)) : null;
 
   return (
-    <html lang="ko">
+    <html lang="ko" className={`${cormorant.variable} ${inter.variable} ${notoSansKr.variable} ${notoSerifKr.variable}`}>
       <body>
-        <header className="topbar">
-          <Link href="/" className="brand">{APP_NAME.toUpperCase()}</Link>
-          <nav>
-            {user ? (
-              <>
-                <Link href="/exams">Academy</Link>
-                <Link href="/me/showcase">Showcase</Link>
-                {user.handle && <Link href={`/${user.handle}`}>내 프로필</Link>}
-                <form action={logoutAction}>
-                  <button className="btn" type="submit">로그아웃</button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/login">로그인</Link>
-                <Link href="/signup" className="btn btn-primary">시작하기</Link>
-              </>
-            )}
-          </nav>
+        <header className="site-header">
+          <div className="shell site-header__inner">
+            <Link href="/" className="brand" aria-label={APP_NAME}>
+              <span className="brand__mark" aria-hidden />
+              {APP_NAME}
+            </Link>
+            <SiteNav signedIn={Boolean(user)} />
+            <div className="site-actions">
+              {user ? (
+                <>
+                  {user.handle && avatar ? (
+                    <Link href={`/${user.handle}`} className="me-chip">
+                      <Pfp avatar={avatar} size={28} name={user.nickname ?? user.handle} />
+                      <span className="me-chip__handle">{user.nickname ?? user.handle}</span>
+                    </Link>
+                  ) : (
+                    <Link href="/onboarding/persona" className="link">Continue</Link>
+                  )}
+                  <form action={logoutAction}>
+                    <button className="link link--mute" type="submit">Sign out</button>
+                  </form>
+                </>
+              ) : (
+                <Link href="/login" className="btn btn--sm">Sign in</Link>
+              )}
+            </div>
+          </div>
         </header>
-        <main className="container">{children}</main>
+
+        <main>{children}</main>
+
+        <footer className="site-footer">
+          <div className="shell site-footer__inner">
+            <span className="eyebrow eyebrow--ink">{APP_NAME}</span>
+            <span className="eyebrow">A stylish digital identity for poker players</span>
+            <span className="eyebrow">{TAGLINE}</span>
+          </div>
+        </footer>
+
         {devEnabled && !devUnlocked && (
-          <Link href="/dev/unlock" className="btn btn-dev dev-fab">개발자 모드</Link>
+          <Link href="/dev/unlock" className="dev-fab">Developer mode</Link>
         )}
         {devUnlocked && (
           <div className="devbar">
             <strong>DEV MODE</strong>
-            <span>{user ? `#${user.id} ${user.email}` : "로그인 안 됨"}</span>
+            <span>{user ? `#${user.id} ${user.email}` : "not signed in"}</span>
             <Link href="/dev">개발자 패널</Link>
-            <form action={lockDevAction} style={{ marginLeft: "auto" }}>
-              <button className="btn btn-dev" type="submit" style={{ padding: "4px 10px" }}>잠그기</button>
+            <form action={lockDevAction}>
+              <button type="submit">Lock</button>
             </form>
           </div>
         )}
