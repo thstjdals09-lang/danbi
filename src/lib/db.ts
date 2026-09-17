@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS exam_attempts (
   score       INTEGER NOT NULL,
   grade       TEXT NOT NULL,
   answers     TEXT NOT NULL,
+  rewards     TEXT NOT NULL DEFAULT '{}',
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -54,6 +55,20 @@ CREATE TABLE IF NOT EXISTS showcase_slots (
 );
 `;
 
+/** 이미 만들어진 DB 에 나중에 추가된 컬럼을 붙인다. */
+const COLUMN_MIGRATIONS: { table: string; column: string; definition: string }[] = [
+  { table: "exam_attempts", column: "rewards", definition: "TEXT NOT NULL DEFAULT '{}'" },
+];
+
+function migrate(conn: DatabaseSync): void {
+  for (const { table, column, definition } of COLUMN_MIGRATIONS) {
+    const columns = conn.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+    if (!columns.some((c) => c.name === column)) {
+      conn.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    }
+  }
+}
+
 const globalForDb = globalThis as unknown as { danbiDb?: DatabaseSync };
 
 export function db(): DatabaseSync {
@@ -62,6 +77,7 @@ export function db(): DatabaseSync {
     const conn = new DatabaseSync(DB_PATH);
     conn.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     conn.exec(SCHEMA);
+    migrate(conn);
     globalForDb.danbiDb = conn;
   }
   return globalForDb.danbiDb;
