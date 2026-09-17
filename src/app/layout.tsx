@@ -32,6 +32,8 @@ const notoSerifKr = Noto_Serif_KR({
 export const metadata: Metadata = {
   title: `${APP_NAME} — ${TAGLINE}`,
   description: "실력으로 증명하고, 캐릭터와 커리어로 성장하는 포커 플레이어 아이덴티티 게임.",
+  // 파비콘 이미지는 외부 제작 전까지 두지 않는다 (브라우저의 /favicon.ico 404 요청 방지)
+  icons: { icon: "data:," },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

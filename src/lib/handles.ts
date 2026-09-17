@@ -1,8 +1,9 @@
 /** 공개 프로필 URL(서비스/handle)에 쓰이므로 라우트 이름과 겹치면 안 된다. */
 export const RESERVED_HANDLES = new Set([
-  "login", "signup", "logout", "onboarding", "exams", "academy", "me", "dev",
-  "api", "admin", "settings", "profile", "images", "static", "_next",
+  "login", "signup", "logout", "onboarding", "exams", "exam", "academy", "me", "dev",
+  "api", "admin", "settings", "profile", "images", "assets", "static", "_next",
   "favicon.ico", "robots.txt", "danbi", "support", "help",
+  "collection", "community", "play", "home", "players", "showcase", "stats", "season", "shop",
 ]);
 
 export const HANDLE_PATTERN = /^[a-z0-9_]{3,20}$/;

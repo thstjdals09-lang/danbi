@@ -7,15 +7,17 @@ export function UnlockForm() {
   const [state, formAction, pending] = useActionState<UnlockFormState, FormData>(unlockDevAction, {});
 
   return (
-    <form action={formAction} className="form">
-      <label>
-        비밀번호
-        <input name="password" type="password" inputMode="numeric" autoComplete="off" required autoFocus />
-      </label>
-      {state.error && <p className="error">{state.error}</p>}
-      <button className="btn btn-dev" type="submit" disabled={pending}>
-        잠금 해제
-      </button>
+    <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div className="field">
+        <label htmlFor="dev-password">Password</label>
+        <input id="dev-password" name="password" type="password" inputMode="numeric" autoComplete="off" required autoFocus />
+      </div>
+      {state.error && <p className="form-error">{state.error}</p>}
+      <div>
+        <button className="btn btn--dev" type="submit" disabled={pending}>
+          잠금 해제
+        </button>
+      </div>
     </form>
   );
 }

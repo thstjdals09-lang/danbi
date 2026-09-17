@@ -1,6 +1,24 @@
-# danbi
+# POKER PLAYER GROW
 
 **PLAY. PROVE. BECOME.**
+
+실제 포커 실력을 시험으로 증명하며 나만의 포커 플레이어 캐릭터와 커리어를 성장시키고, 그 결과를 수집·전시·공유하는 소셜 육성 웹게임.
+
+Core loop: **PERSONA → EXAM → PROOF → GROWTH → SHOWCASE**
+
+## 핵심 흐름
+
+Landing → Persona Test(가입 전 가능) → Persona Reveal → 이름·공개 ID(+계정 생성) → My Player → Exam → Result
+(Grade → Certification → Gear → Character Evolution) → Add to Showcase → Public Profile `/{handle}`
+
+| 경로 | 화면 |
+| --- | --- |
+| `/` | 비로그인: Landing / 로그인: My Player |
+| `/onboarding/persona` · `/result` · `/handle` | Persona Test · Reveal · 이름 설정 |
+| `/exams` · `/exams/{id}` · `/exams/result/{attemptId}` | 시험 목록 · 응시 · 결과/진화 연출 |
+| `/collection?tab=` | Avatars · Certifications · Gear · Trophies · Background |
+| `/me/showcase` · `/me/stats` | My Room(쇼케이스 편집) · 증명 기록 |
+| `/community` · `/{handle}` | 플레이어 목록 · 공개 프로필(Player Passport) |
 
 ## 실행
 
@@ -34,8 +52,8 @@ DB 파일은 `data/danbi.db`에 자동 생성됩니다. 커밋되지 않습니�
 - 화면 하단 개발자 바 + `/dev` 개발자 패널 (잠그기 버튼)
 - 테스트 계정 생성, 다른 계정으로 로그인
 - 온보딩 건너뛰기/초기화, 진행 기록 초기화
-- 현재 Persona 변경 (Origin 유지)
-- 시험을 보지 않고 등급별 결과 지급
+- Origin Persona 교체(계열별 화면 확인용), Current Identity 지정
+- 시험을 보지 않고 등급별 결과 지급 (기어·정체성·성장 반영까지 확인)
 - 시험 중 정답 표시, 정답 자동 채우기, 즉시 제출
 - 이미지가 없는 슬롯에 필요한 파일 경로 표시
 
@@ -49,28 +67,50 @@ DB 파일은 `data/danbi.db`에 자동 생성됩니다. 커밋되지 않습니�
 2. `src/lib/exams/registry.ts`에 등록합니다.
 3. `DANBI_EXAM_SOURCE`로 선택합니다.
 
-현재 `local` 소스에는 샘플 시험(기초 용어) 하나가 들어 있습니다: `src/content/exams/basic-terms.ts`
+현재 `local` 소스의 샘플 시험:
 
-## 이미지
+- `basic-terms` — 기초 용어 (첫 시험)
+- `preflop-40bb` — MTT · 8-Max · 40BB · ChipEV · Preflop 스팟. **전략 빈도는 화면/채점 검증용 근사값이며 솔버로 검증되지 않았습니다.**
 
-이미지는 외부에서 제작해 `public/images`에 넣습니다. 경로 규칙은 [public/images/README.md](public/images/README.md)를 참고하세요.
+스팟 문제는 선택한 액션의 전략 빈도 / 최고 빈도로 부분 점수를 줍니다.
+
+## 캐릭터 · 에셋
+
+캐릭터는 CSS/SVG로 그리지 않습니다. `public/assets`에 외부 제작 에셋을 넣으면 슬롯이 채워집니다.
+경로 규칙: [public/assets/README.md](public/assets/README.md)
+
+캐릭터는 단일 PNG가 아니라 `AvatarState`로 조립됩니다.
+
+```
+AvatarState { originPersona, currentIdentity, careerStage, equippedGear[], unlockedGear[], cosmetics[] }
+배경 기어 → persona full → 기어 overlay 레이어 → 장착 기어 callout
+```
+
+- Origin Persona는 이름 설정 시 확정되고 바뀌지 않습니다. Current Identity는 인증 등급 조건으로 발전합니다.
+- Level = 1 + 인증 등급 포인트 합(C1 · B2 · A3 · S4). 의미 없는 EXP는 없습니다.
+- Rarity(디자인 등급 + 실제 보유율)와 Difficulty(★)는 별도 데이터입니다.
+- Earned(시험으로 획득)와 Cosmetic(`cosmetics[]`, 현재 비어 있음)은 분리됩니다.
 
 ## 구조
 
 ```
 src/
   app/
+    page.tsx           Landing / My Player
     (auth)/            로그인 · 가입
-    onboarding/        Persona Test → 닉네임/공개 ID
-    exams/             Academy · 시험 응시 · 결과
-    me/showcase/       쇼케이스 편집
-    [handle]/          공개 프로필
+    onboarding/        Persona Test → Reveal → 이름·공개 ID
+    exams/             시험 목록 · 결정 인터페이스 · 결과/진화 연출
+    collection/        컬렉션 탭 · 장착/쇼케이스 액션
+    community/         플레이어 목록
+    me/                My Room(쇼케이스) · Stats
+    [handle]/          공개 프로필 (Player Passport)
     dev/               개발자 패널 (개발자 모드 전용)
-  content/             페르소나 · 성장 단계 · 트로피 · 시험 데이터 (초안 문구)
+  components/          PlayerFigure · AssetSlot · Medal · PokerTable · ShareActions …
+  content/             Persona 계열 · 기어 · 정체성 · 성장 단계 · 트로피 · 시험 데이터 (초안 문구)
   lib/
-    auth/              비밀번호 해시 · 세션
-    exams/             시험 타입 · 채점 · 문제 소스
-    repo/              DB 접근
-    career.ts          영역별 등급 · Current Pursuit · 수집물 표시
-    progress.ts        시험 결과 → 인증/트로피/성장 반영
+    domain.ts          화면이 쓰는 도메인 타입 (AvatarState, CollectionItem, Certification, Pursuit, PublicProfile …)
+    player.ts          DB + 콘텐츠 → 도메인 객체 조립 (저장소 교체 시 이 파일만 수정)
+    progress.ts        시험 결과 → 인증 · 트로피 · 기어 · 정체성 · 레벨 · 성장 반영
+    assets.ts          에셋 슬롯 경로
+    auth/ exams/ repo/ 인증 · 시험(타입/채점/소스) · DB 접근
 ```
