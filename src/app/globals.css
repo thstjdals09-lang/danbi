@@ -894,15 +894,16 @@ h1, h2, h3, h4, p { margin: 0; }
   display: grid;
   grid-template-columns: minmax(0, 8fr) minmax(0, 3.2fr);
   gap: clamp(24px, 4vw, 64px);
-  padding-block: clamp(24px, 4vh, 44px);
+  padding-block: 12px 24px;
 }
 .exam__prompt { font-size: clamp(20px, 1.8vw, 26px); line-height: 1.45; letter-spacing: -0.01em; }
 
 .poker-table {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 8.6;
-  margin: 36px 0 28px;
+  max-width: 880px;
+  aspect-ratio: 16 / 7;
+  margin: 26px auto 20px;
 }
 .poker-table__felt {
   position: absolute;
@@ -954,7 +955,8 @@ h1, h2, h3, h4, p { margin: 0; }
   white-space: nowrap;
   color: var(--ink-2);
 }
-.seat--folded { opacity: 0.38; }
+.seat--folded .seat__pos { color: var(--mute); border-style: dashed; background: transparent; }
+.seat--folded .seat__stack { color: var(--faint); }
 .seat--active .seat__pos { background: var(--burgundy); border-color: var(--burgundy); color: var(--paper); }
 .seat--hero .seat__pos { background: var(--cobalt); border-color: var(--cobalt); color: var(--paper); }
 .seat__label { font-size: 9px; letter-spacing: 0.24em; color: var(--mute); text-transform: uppercase; }
@@ -1013,7 +1015,7 @@ h1, h2, h3, h4, p { margin: 0; }
   display: flex;
   align-items: center;
   gap: 22px;
-  min-height: 60px;
+  min-height: 54px;
   padding: 0 22px;
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--paper) 50%, var(--paper-2));
@@ -1050,6 +1052,8 @@ h1, h2, h3, h4, p { margin: 0; }
   .exam__aside > * { flex: 1 1 220px; }
 }
 @media (max-width: 640px) {
+  .exam__bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .exam__bar > span:last-child { width: 100%; justify-content: space-between; }
   .poker-table { aspect-ratio: 1 / 0.92; margin: 24px 0 18px; }
   .poker-table__felt { inset: 14% 12%; }
   .seat__pos { min-width: 44px; padding: 4px 6px 3px; font-size: 10px; letter-spacing: 0.08em; }
@@ -1142,6 +1146,10 @@ h1, h2, h3, h4, p { margin: 0; }
 .gear-thumb { position: relative; width: 92px; height: 92px; flex: none; border: 1px solid var(--line); }
 .result__actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .result__skip { position: absolute; top: 20px; right: 20px; z-index: 5; }
+/* 새로 얻은 기어의 callout 은 Character Change 단계에서 나타난다 */
+.result[data-evolved="false"] .callout[data-new] { animation: none; opacity: 0; }
+.result[data-evolved="true"] .callout[data-new] { animation: callout-in 1s var(--ease) 0.2s both; }
+.result[data-evolved="true"] .callout[data-new] .callout__dot { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent); }
 
 .review { padding-block: 56px 24px; }
 .review__item { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); }

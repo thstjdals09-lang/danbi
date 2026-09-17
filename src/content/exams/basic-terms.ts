@@ -6,7 +6,7 @@ import type { Exam } from "@/lib/exams/types";
  */
 export const basicTermsExam: Exam = {
   id: "basic-terms",
-  title: "Poker Basics — 기초 용어",
+  title: "Poker Basics",
   domain: "Fundamentals",
   skill: "Terminology",
   description: "포지션, 액션, 핸드 표기 등 포커 테이블에서 쓰이는 기본 용어를 이해하고 있는지 확인합니다.",
