@@ -925,7 +925,9 @@
   text-align: left;
 }
 .r0-slot__label { font-size: 8.5px; letter-spacing: 0.26em; color: var(--faint); }
-.r0-slot__ask { font-size: 10.5px; line-height: 1.5; color: var(--dim); }
+.r0-slot__ask { display: block; font-size: 10.5px; line-height: 1.5; color: var(--dim); }
+.r0-slot__askEn { display: block; font-size: 10.5px; letter-spacing: 0.04em; color: var(--dim); }
+.r0-slot__askKo { display: block; margin-top: 2px; font-size: 10px; color: var(--faint); }
 .r0-slot[data-target="true"] { background: rgba(176, 141, 75, 0.07); box-shadow: inset 2px 0 0 var(--brass-dim); }
 .r0-slot[data-target="true"] .r0-slot__ask { color: var(--brass); letter-spacing: 0.1em; }
 .r0-slot[data-filled="true"] .r0-slot__label { color: var(--brass); }
@@ -1006,14 +1008,23 @@
 .r0-rec__label { font-size: 9px; letter-spacing: 0.2em; color: var(--dim); }
 .r0-rec__code { font-size: 15px; letter-spacing: 0.12em; color: var(--text); }
 .r0-rec__src { font-size: 8.5px; letter-spacing: 0.14em; color: var(--faint); }
-.r0-rec__status { font-size: 7.5px; letter-spacing: 0.14em; color: var(--faint); text-align: right; max-width: 70px; }
+.r0-rec__status {
+  flex: none;
+  font-size: 7px;
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+  text-align: right;
+  max-width: 74px;
+  opacity: 0.85;
+}
 
 .r0-rec[data-status="locked"] .r0-rec__hit { opacity: 0.55; }
 .r0-rec[data-status="locked"] .r0-rec__code { font-size: 11px; color: var(--faint); letter-spacing: 0.2em; }
-.r0-rec[data-status="unreviewed"] .r0-rec__status { color: var(--phos); }
-.r0-rec[data-status="unresolved"] .r0-rec__status { color: var(--alert); }
+.r0-rec[data-status="unreviewed"] .r0-rec__status { color: var(--faint); }
+.r0-rec[data-status="unresolved"] .r0-rec__status { color: var(--dim); }
 .r0-rec[data-status="used"] { background: rgba(176, 141, 75, 0.06); box-shadow: inset 2px 0 0 var(--brass-dim); }
-.r0-rec[data-status="used"] .r0-rec__status { color: var(--brass); }
+.r0-rec[data-status="used"] .r0-rec__status { color: var(--brass-dim); }
 .r0-rec[data-open="true"] { background: rgba(29, 33, 25, 0.75); }
 
 .r0-rec__body { padding: 0 12px 12px 42px; }
@@ -1027,7 +1038,18 @@
   letter-spacing: 0.16em;
   color: var(--brass);
 }
-.r0-rec__act--mute { border-color: var(--line-2); color: var(--faint); }
+.r0-rec__tool {
+  display: block;
+  margin-top: 8px;
+  min-height: 40px;
+  padding: 0;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--line-2);
+}
 
 .r0-xref { margin-top: 10px; border-top: 1px dashed var(--line-2); padding-top: 9px; }
 .r0-xref__ask { margin: 0 0 7px; font-size: 9px; letter-spacing: 0.14em; color: var(--faint); }
@@ -1043,11 +1065,15 @@
 
 /* ---------- 남은 질문 ---------- */
 
-.r0-open { border: 1px solid var(--alert); background: rgba(60, 26, 18, 0.22); padding: 12px; }
-.r0-open__label { margin: 0; font-size: 8.5px; letter-spacing: 0.3em; color: var(--alert); }
-.r0-open__q { margin: 6px 0 0; font-size: 12.5px; letter-spacing: 0.08em; color: var(--text); }
-.r0-open__qKo { margin: 3px 0 0; font-size: 10.5px; color: var(--dim); }
-.r0-open__note { margin: 10px 0 0; font-size: 9.5px; line-height: 1.6; color: var(--faint); }
+.r0-open {
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--brass-dim);
+  background: rgba(18, 20, 16, 0.5);
+  padding: 14px 12px;
+}
+.r0-open__label { margin: 0; font-size: 8.5px; letter-spacing: 0.3em; color: var(--faint); }
+.r0-open__q { margin: 8px 0 0; font-size: 13px; line-height: 1.45; letter-spacing: 0.06em; color: var(--text); }
+.r0-open__qKo { margin: 4px 0 0; font-size: 11px; color: var(--dim); }
 
 /* ---------- 출처별 기록 형태 ---------- */
 
@@ -1354,11 +1380,3 @@
   border-style: dashed;
 }
 
-/* 다음 조사로 넘어가는 보류 기록 */
-.r0-held { border-top: 1px dashed var(--line-2); padding: 10px 12px 12px; }
-.r0-held__label { margin: 0 0 8px; font-size: 8.5px; letter-spacing: 0.24em; color: var(--faint); }
-.r0-held__row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
-.r0-held__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.r0-held__code { font-size: 13px; letter-spacing: 0.12em; color: var(--dim); }
-.r0-held__label2 { font-size: 8.5px; letter-spacing: 0.16em; color: var(--faint); }
-.r0-held__status { font-size: 7.5px; letter-spacing: 0.14em; color: var(--alert); }

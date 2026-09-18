@@ -34,27 +34,37 @@ Notebook 은 증거를 짝맞추는 곳이 아니라 **결론을 내리는 작�
 CASE 00 의 가설은 `ROOM 504 IS PHYSICALLY PRESENT, BUT HAS BEEN REMOVED FROM THE CURRENT
 PROPERTY RECORD.` 이고, 세 칸을 요구한다.
 
-| 칸 | 묻는 것 | 받는 기록 |
+| 칸 | 화면에 묻는 것 | 내부적으로 받는 기록 |
 | --- | --- | --- |
-| CURRENT STATE | 지금 기록은 이 자리를 무엇이라 말하는가 | FLOOR PLAN 5F-W (5 UNITS) |
-| CONFLICTING RECORD | 그 기록과 어긋나는 기록이 있는가 | ARCHIVE FRAME / DOOR 504, CAM 05-W |
-| CONFIRMING EVIDENCE | 어느 쪽이 사실인지 확인했는가 | RECOVERED LOCATION / ROOM 504 |
+| CURRENT STATE | What does the current record claim? / 현재 기록은 무엇을 주장하는가? | FLOOR PLAN 5F-W |
+| CONFLICTING RECORD | What contradicts that claim? / 그 주장과 충돌하는 기록은 무엇인가? | ARCHIVE FRAME, CAM 05-W |
+| CONFIRMING EVIDENCE | What proves which version is real? / 어느 기록이 실제 상황과 일치하는가? | RECOVERED LOCATION |
+
+슬롯은 **정답 종류를 화면에 노출하지 않는다.** 도면/CCTV/객실 같은 카테고리 이름도, 그것을 암시하는
+아이콘도 칸 주위에 두지 않는다. 플레이어는 기록의 내용을 읽고 판단한다.
 
 - 기록을 눌러 펼치고 `ADD TO HYPOTHESIS` → 칸을 탭해 배치한다. 드래그를 강요하지 않는다.
+- 안내 강도는 사건마다 데이터로 정한다 (`guidance`). `guided` 는 영문 질문 + 한국어(CASE 00 · 튜토리얼),
+  `reduced` 는 영문 질문만, `open` 은 칸 이름만 보여준다. 같은 시스템으로 뒤 사건을 더 개방적으로 만든다.
 - 맞지 않는 기록에는 `WRONG` 대신 시스템이 이유를 말한다 (`NO DIRECT CONFLICT FOUND IN THIS ENTRY.`).
   페널티가 없고, 잘못 넣어 본 것은 저장되지 않는다.
 - 세 칸이 차면 `REVIEW HYPOTHESIS` → 가설 문장과 근거 3건을 보여주고 `CONFIRM`.
 - 검증하면 `HYPOTHESIS SUPPORTED.` 만 출력한다. 사건 파일에 FINDING 과 `STATUS: UNRESOLVED CAUSE`
   가 남고, 채택된 근거들 사이의 관계는 시스템이 자동으로 정리하며, 남은 질문
   `WHO REMOVED ROOM 504 FROM THE RECORD?` 이 열린다.
-- **모든 기록을 소모하지 않는다.** 사진(1987)·시계 자국(02:13)·내선(3317)은 `UNRESOLVED` 로 남아
-  장기 미스터리가 된다. 기록마다 UNREVIEWED / REVIEWED / UNRESOLVED / USED IN HYPOTHESIS 상태가 붙는다.
-- 기록 ↔ 기록 직접 대조(`CROSS-REFERENCE`)는 남아 있지만 진행에는 관여하지 않는 참고 기능이다.
-  관계가 없으면 `NO DIRECT RELATION ESTABLISHED.` 라고만 답한다.
+- **모든 기록을 소모하지 않는다.** 사진(1987)·시계 자국(02:13)·내선(3317)은 `UNRESOLVED` 로 남는다.
+  기록마다 UNREVIEWED / REVIEWED / UNRESOLVED / USED IN HYPOTHESIS 상태가 붙지만, 제목보다 작게
+  표시해 퀘스트 태그처럼 보이지 않게 한다.
+- **"다음 사건에서 쓰인다" 같은 메타 정보를 주지 않는다.** 미해결 기록은 출처와 UNRESOLVED 만 남기고
+  의미를 설명하지 않는다. 장기 미스터리는 게임이 알려줘서가 아니라 플레이어가 기억해서 생긴다.
+- 사건이 끝나면 마지막에 `UNRESOLVED QUESTION` 이 조용히 남는다. 다음 퀘스트 버튼이나 팝업이 아니라
+  조사 기록 안의 한 항목이다.
+- 기록 ↔ 기록 직접 대조(`CROSS-REFERENCE`)는 기록을 펼쳤을 때의 작은 보조 도구로만 존재한다.
+  메인 CTA 가 아니며, 관계가 없으면 `NO DIRECT RELATION ESTABLISHED.` 라고만 답한다.
 
 가설은 `src/room0/data/hypotheses.ts` 의 데이터다. CASE 01~09 는 이 배열에 항목을 추가하면
-같은 시스템을 그대로 쓴다 (question · slots · accepts · reject · statement · finding · status ·
-followupQuestion).
+같은 시스템을 그대로 쓴다 (question · guidance · slots(ask/askKo/accepts/reject) · statement ·
+finding · status · followupQuestion).
 
 ## 구조
 

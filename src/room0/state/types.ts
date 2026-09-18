@@ -53,17 +53,24 @@ export interface HypothesisSlotDef {
   id: string;
   /** 처음에는 추상적으로만 말한다. 정답을 지시하지 않는다 */
   label: string;
-  /** 이 칸이 무엇을 요구하는지에 대한 한 줄 */
+  /** 이 칸이 무엇을 묻는지 — 정답 종류가 아니라 사고 과정을 묻는다 */
   ask: string;
+  askKo: string;
   /** 이 칸을 충족시키는 기록들 (하나만 들어가면 된다) */
   accepts: EvidenceId[];
   /** 맞지 않는 기록을 넣었을 때의 시스템 반응 */
   reject: string;
 }
 
+/** 사건별 안내 강도. CASE 00 은 튜토리얼이라 guided,
+    이후 사건은 같은 시스템을 더 개방적인 추리로 쓸 수 있다. */
+export type GuidanceLevel = "guided" | "reduced" | "open";
+
 export interface HypothesisDef {
   id: HypothesisId;
   caseId: CaseId;
+  /** guided: 영문 질문 + 한국어 / reduced: 영문 질문만 / open: 칸 이름만 */
+  guidance: GuidanceLevel;
   /** 이 사건이 지금 묻고 있는 것 */
   question: string;
   questionKo: string;

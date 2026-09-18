@@ -94,8 +94,9 @@ export function NotebookScene() {
 
   const establishedRelations = RELATIONS.filter((r) => game.relationsConfirmed.includes(r.id));
 
-  /* 이 사건의 가설로는 설명되지 않는, 다음 조사로 넘어가는 기록 */
-  const held = EVIDENCE.filter((e) => e.caseId !== "case00" && game.evidenceCollected.includes(e.id));
+  /* 조사 중 확보한 기록은 사건 구분 없이 같은 기록철에 남는다.
+     "다음 사건용" 같은 메타 표시는 하지 않는다 — 플레이어가 스스로 기억하게 둔다. */
+  const extra = EVIDENCE.filter((e) => !activeCase.evidenceIds.includes(e.id) && game.evidenceCollected.includes(e.id));
 
   return (
     <div className="r0-scene r0-scene--note">
@@ -164,7 +165,16 @@ export function NotebookScene() {
                           </span>
                         </span>
                       ) : (
-                        <span className="r0-slot__ask">{targeting ? "여기에 넣기" : slot.ask}</span>
+                        <span className="r0-slot__ask">
+                          {targeting ? (
+                            "여기에 넣기"
+                          ) : (
+                            <>
+                              {hyp.guidance !== "open" && <span className="r0-slot__askEn">{slot.ask}</span>}
+                              {hyp.guidance === "guided" && <span className="r0-slot__askKo">{slot.askKo}</span>}
+                            </>
+                          )}
+                        </span>
                       )}
                     </button>
                   </li>
@@ -243,7 +253,7 @@ export function NotebookScene() {
           </header>
 
           <ul className="r0-file__list">
-            {rows.map((ev, i) => {
+            {[...rows, ...extra].map((ev, i) => {
               const status = statusOf(ev, game, usedIds);
               const unlocked = status !== "locked";
               const open = openId === ev.id;
@@ -283,17 +293,18 @@ export function NotebookScene() {
                             ADD TO HYPOTHESIS
                           </button>
                         )}
-                        <button
-                          type="button"
-                          className="r0-rec__act r0-rec__act--mute"
-                          onClick={() => {
-                            fx("tap", "touch");
-                            setCrossRef(crossRef === ev.id ? null : ev.id);
-                          }}
-                        >
-                          CROSS-REFERENCE
-                        </button>
                       </div>
+                      <button
+                        type="button"
+                        className="r0-rec__tool"
+                        aria-expanded={crossRef === ev.id}
+                        onClick={() => {
+                          fx("tap", "touch");
+                          setCrossRef(crossRef === ev.id ? null : ev.id);
+                        }}
+                      >
+                        cross-reference
+                      </button>
 
                       {crossRef === ev.id && (
                         <div className="r0-xref">
@@ -316,32 +327,14 @@ export function NotebookScene() {
             })}
           </ul>
 
-          {held.length > 0 && (
-            <div className="r0-held">
-              <p className="r0-held__label">HELD FOR NEXT INVESTIGATION</p>
-              {held.map((ev) => (
-                <div key={ev.id} className="r0-held__row">
-                  <EvidenceMark def={ev} />
-                  <span className="r0-held__main">
-                    <span className="r0-held__code">{ev.code}</span>
-                    <span className="r0-held__label2">{ev.label}</span>
-                  </span>
-                  <span className="r0-held__status">UNRESOLVED</span>
-                </div>
-              ))}
-            </div>
-          )}
         </section>
 
         {/* ── 남은 질문 ───────────────────────────────────────── */}
         {confirmed && (
           <section className="r0-open">
-            <p className="r0-open__label">OPEN QUESTION</p>
+            <p className="r0-open__label">UNRESOLVED QUESTION</p>
             <p className="r0-open__q">{hyp.followupQuestion}</p>
             <p className="r0-open__qKo">{hyp.followupQuestionKo}</p>
-            <p className="r0-open__note">
-              KEY INDEX 5F — 3317 NOT ISSUED. 이 조사는 여기서 멈춘다.
-            </p>
           </section>
         )}
       </div>
