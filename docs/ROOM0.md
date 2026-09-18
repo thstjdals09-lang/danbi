@@ -2,7 +2,8 @@
 
 모바일 웹 미스터리 퍼즐 게임. 이 저장소 안에서 포커 제품과 **완전히 분리된 두 번째 게임**으로 돌아간다.
 
-- 진입: `/room0`
+- 공개 테스트 링크: https://thstjdals09-lang.github.io/danbi/ (gh-pages 브랜치, 정적 빌드)
+- 개발 중 진입: `/room0` (npm run dev)
 - 서버·DB·로그인 사용 안 함. 전부 클라이언트 + LocalStorage.
 - 기준 뷰포트 390×844. 360×740 ~ 430×932 대응.
 - 기획서: `ROOM_0_개발_기획서_v0.1` (Source of Truth)
@@ -61,3 +62,16 @@ SVG 레이어만 최종 아트로 바꾸면 인터랙션은 그대로 살아 있
 힌트 사용, 누적 플레이 시간, 음소거 여부. 스키마가 바뀌면 `persist.ts` 의 `migrate()` 에서 끌어올린다.
 
 진행을 초기화하려면 게임 안에서 `ASSIST → RECORD PURGE` (두 번 눌러 확인).
+
+## 배포
+
+```bash
+npm run room0:static      # dist/room0 (index.html + room0.js + room0.css)
+```
+
+정적 파일뿐이라 아무 정적 호스팅에나 올라간다. 현재는 `gh-pages` 브랜치 루트에 올려
+GitHub Pages 가 https://thstjdals09-lang.github.io/danbi/ 로 서비스한다 (`/danbi/room0/` 로도 열린다).
+갱신하려면 다시 빌드해서 그 브랜치에 덮어쓰면 된다.
+
+폰 실기기로 dev 서버를 직접 열 때는 `next.config.ts` 의 `allowedDevOrigins` 에 그 호스트가
+들어 있어야 한다. 없으면 Next 16 이 dev 리소스를 차단해서 **빈 화면만 보인다**.

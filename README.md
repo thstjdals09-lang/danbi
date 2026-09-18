@@ -104,6 +104,7 @@ AvatarState { originPersona, currentIdentity, careerStage, equippedGear[], unloc
 같은 저장소 안에서 돌아가는 두 번째 게임. 모바일 웹 미스터리 퍼즐 「ROOM 0 — NULL HOTEL」.
 포커 제품과 코드·상태·스타일이 분리되어 있으며 서버나 DB를 쓰지 않는다.
 진입은 `/room0`, 문서는 [docs/ROOM0.md](docs/ROOM0.md).
+공개 테스트: https://thstjdals09-lang.github.io/danbi/
 
 ## 구조
 
