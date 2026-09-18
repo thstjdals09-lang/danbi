@@ -28,6 +28,15 @@ export const INITIAL_GAME: GameState = {
   clockMarkFound: false,
   notebookUnlocked: false,
 
+  frontDeskUnlocked: false,
+  keyLogOpened: false,
+  key3317Inspected: false,
+  cabinetInspected: false,
+  routingInspected: false,
+  dialed: [],
+  phoneRinging: false,
+  phoneAnswered: false,
+
   evidenceCollected: [],
   evidenceReviewed: [],
   hypothesisSlots: {},
@@ -79,6 +88,13 @@ export type Action =
   | { type: "room/photoFlip" }
   | { type: "room/clockTap" }
   | { type: "room/phone" }
+  | { type: "desk/keyLog" }
+  | { type: "desk/inspect"; id: string; log: string }
+  | { type: "desk/key3317" }
+  | { type: "desk/cabinet" }
+  | { type: "desk/routing" }
+  | { type: "desk/dial"; number: string }
+  | { type: "room/answerPhone" }
   | { type: "note/review"; id: EvidenceId }
   | { type: "note/assign"; hypothesisId: HypothesisId; slotId: string; evidenceId: EvidenceId }
   | { type: "note/unassign"; hypothesisId: HypothesisId; slotId: string }
@@ -260,6 +276,87 @@ export function reducer(state: Room0State, action: Action): Room0State {
     }
 
     /* 기록을 펼쳐 읽었다 */
+    /* ── FRONT DESK ─────────────────────────────────── */
+
+    case "desk/keyLog":
+      if (g.keyLogOpened) return state;
+      return {
+        ...state,
+        game: { ...g, keyLogOpened: true },
+        log: pushLog(state, "KEY CONTROL — LEGACY LOG MOUNTED. RETURNS ONLY.", "sys"),
+      };
+
+    case "desk/inspect":
+      return {
+        ...state,
+        game: g.inspected.includes(action.id) ? g : { ...g, inspected: [...g.inspected, action.id] },
+        log: pushLog(state, action.log, "sys"),
+      };
+
+    case "desk/key3317": {
+      if (g.key3317Inspected) return { ...state, log: pushLog(state, "NO MATCHING KEY PROFILE.", "sys") };
+      const next: Room0State = {
+        ...state,
+        game: { ...g, key3317Inspected: true },
+        log: pushLog(state, "KEY 3317 NOT FOUND. NO MATCHING KEY PROFILE.", "alert"),
+      };
+      return grant(next, next.game, "key-3317");
+    }
+
+    case "desk/cabinet": {
+      if (g.cabinetInspected) return state;
+      const next: Room0State = {
+        ...state,
+        game: { ...g, cabinetInspected: true },
+        log: pushLog(state, "EVERY HOOK CHECKED. NO TAG IN THIS CABINET CARRIES 3317.", "alert"),
+      };
+      return grant(next, next.game, "cabinet-3317");
+    }
+
+    case "desk/routing": {
+      if (g.routingInspected) return state;
+      const next: Room0State = {
+        ...state,
+        game: { ...g, routingInspected: true },
+        log: pushLog(state, "EXCHANGE WIRING TABLE — ONE LINE LEFT BLANK.", "alert"),
+      };
+      return grant(next, next.game, "routing-3314");
+    }
+
+    case "desk/dial": {
+      const dialed = g.dialed.includes(action.number) ? g.dialed : [...g.dialed, action.number];
+      if (action.number === "3317") {
+        const next: Room0State = {
+          ...state,
+          game: { ...g, dialed, phoneRinging: true },
+          log: pushLog(state, "RINGBACK. THE LINE IS OPEN SOMEWHERE IN THE BUILDING.", "alert"),
+        };
+        return { ...next, log: pushLog(next, "RING SIGNAL DETECTED — SOURCE NOT AT THIS DESK.", "alert") };
+      }
+      const responses: Record<string, string> = {
+        "3314": "ROOM 501 — NO ANSWER.",
+        "3315": "ROOM 502 — NO ANSWER.",
+        "3316": "ROOM 503 — LINE DISCONNECTED.",
+        "3318": "ROOM 505 — NO ANSWER.",
+        "3319": "ROOM 506 — NO ANSWER.",
+      };
+      return {
+        ...state,
+        game: { ...g, dialed },
+        log: pushLog(state, responses[action.number] ?? "INVALID INTERNAL EXTENSION.", "sys"),
+      };
+    }
+
+    case "room/answerPhone": {
+      if (!g.phoneRinging || g.phoneAnswered) return state;
+      const next: Room0State = {
+        ...state,
+        game: { ...g, phoneAnswered: true, phoneRinging: false },
+        log: pushLog(state, "LINE SOURCE CONFIRMED — EXT 3317 / ROOM 504.", "record"),
+      };
+      return grant(next, next.game, "line-3317");
+    }
+
     case "note/review":
       if (g.evidenceReviewed.includes(action.id)) return state;
       return { ...state, game: { ...g, evidenceReviewed: [...g.evidenceReviewed, action.id] } };
@@ -341,12 +438,17 @@ export function reducer(state: Room0State, action: Action): Room0State {
         relationsConfirmed: [...auto],
         casesClosed,
         currentCase: def.caseId === "case00" ? "case01" : g.currentCase,
+        /* CASE 00 이 정리되면 프런트의 옛 기록에 접근할 수 있게 된다 */
+        frontDeskUnlocked: def.caseId === "case00" ? true : g.frontDeskUnlocked,
       };
 
       let next: Room0State = { ...state, game, log: pushLog(state, "HYPOTHESIS SUPPORTED.", "record") };
       next = { ...next, log: pushLog(next, def.statement, "record") };
       next = { ...next, log: pushLog(next, `STATUS — ${def.status}`, "alert") };
       next = { ...next, log: pushLog(next, def.followupQuestion, "alert") };
+      if (def.caseId === "case00") {
+        next = { ...next, log: pushLog(next, "KEY CONTROL ARCHIVE AVAILABLE — FRONT DESK, GF", "alert") };
+      }
       return next;
     }
 
@@ -395,6 +497,11 @@ export function reducer(state: Room0State, action: Action): Room0State {
 /** 기획서 §10 의 상태 머신을 플래그에서 파생한다. */
 export function deriveStage(g: GameState): Stage {
   if (!g.bootCompleted) return "BOOT";
+  if (g.casesClosed.includes("case01")) return "CASE_01_CLOSED";
+  if (g.phoneAnswered) return "CASE_01_ANSWERED";
+  if (g.phoneRinging) return "CASE_01_RINGING";
+  if (g.routingInspected) return "CASE_01_PATTERN";
+  if (g.frontDeskUnlocked) return "CASE_01_OPEN";
   if (g.casesClosed.includes("case00")) return "CASE_00_CLOSED";
   if (Object.keys(g.hypothesisSlots).length > 0) return "NOTEBOOK_LINKED";
   if (g.photoBackInspected && g.clockMarkFound) return "EVIDENCE_COLLECTED";

@@ -58,8 +58,9 @@ const NAV: { scene: SceneId; label: string }[] = [
 export function SystemFrame({ children }: { children: React.ReactNode }) {
   const { game, stage, dispatch, fx } = useGame();
   const [assistOpen, setAssistOpen] = useState(false);
-  const activeCase = caseById(game.casesClosed.includes("case00") ? "case01" : "case00");
-  const caseState = game.casesClosed.includes("case00") ? "PENDING" : "OPEN";
+  const activeId = game.casesClosed.includes("case00") ? "case01" : "case00";
+  const activeCase = caseById(activeId);
+  const caseState = game.casesClosed.includes(activeId) ? "CLOSED" : "OPEN";
 
   const locked = (scene: SceneId) =>
     (scene === "cctv" && !game.cctvUnlocked) || (scene === "notebook" && !game.notebookUnlocked);
@@ -108,7 +109,7 @@ export function SystemFrame({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="r0-bar__row r0-bar__row--meta">
-          <span>5F WEST WING</span>
+          <span>{game.currentScene === "frontdesk" ? "GF — FRONT DESK" : "5F WEST WING"}</span>
           <span className="r0-bar__sep" aria-hidden>·</span>
           <span>
             CASE {activeCase.index} {caseState}

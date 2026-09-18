@@ -70,7 +70,7 @@ export const EVIDENCE: EvidenceDef[] = [
     note: "시계가 걸려 있던 자리만 덜 바랬다. 바늘이 그림자를 남겼고, 그 뒤로 움직이지 않았다.",
   },
 
-  /* 다음 조사로 넘어가는 기록 */
+  /* CASE 01 — 존재하지 않는 열쇠 */
   {
     id: "ext-3317",
     code: "3317",
@@ -79,7 +79,43 @@ export const EVIDENCE: EvidenceDef[] = [
     caseId: "case01",
     kind: "object",
     unresolved: true,
-    note: "다이얼 아래에 찍혀 있다. 키 인덱스에는 3317 이 없다. 교환대에는 있다.",
+    note: "다이얼 아래에 찍혀 있다. 키 인덱스에는 이 번호가 없다.",
+  },
+  {
+    id: "key-3317",
+    code: "3317",
+    label: "KEY CONTROL / LEGACY LOG",
+    source: "FRONT DESK / GF",
+    caseId: "case01",
+    kind: "record",
+    note: "반납 기록 사이에 이 번호가 한 줄 끼어 있다. NO PHYSICAL KEY. 어느 객실의 것인지는 적혀 있지 않다.",
+  },
+  {
+    id: "cabinet-3317",
+    code: "NOT PRESENT",
+    label: "KEY CABINET",
+    source: "FRONT DESK / GF",
+    caseId: "case01",
+    kind: "object",
+    note: "열쇠함의 모든 고리를 확인했다. 이 번호를 단 열쇠는 함에도, 반납함에도, 예비 서랍에도 없다.",
+  },
+  {
+    id: "routing-3314",
+    code: "3314 — 3319",
+    label: "SWITCHBOARD ROUTING",
+    source: "FRONT DESK / EXCHANGE",
+    caseId: "case01",
+    kind: "record",
+    note: "교환대 배선표. 501→3314, 502→3315, 503→3316, 505→3318, 506→3319. 한 줄이 비어 있다.",
+  },
+  {
+    id: "line-3317",
+    code: "EXT 3317 → ROOM 504",
+    label: "LINE SOURCE",
+    source: "FRONT DESK / EXCHANGE",
+    caseId: "case01",
+    kind: "record",
+    note: "회선이 연결된 곳이 기록으로 남았다. 교환기는 이 번호가 어디로 가는지 알고 있었다.",
   },
 ];
 

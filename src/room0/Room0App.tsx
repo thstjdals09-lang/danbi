@@ -9,6 +9,7 @@ import { CCTVScene } from "@/room0/scenes/CCTVScene";
 import { DiscoveryScene } from "@/room0/scenes/DiscoveryScene";
 import { Room504Scene } from "@/room0/scenes/Room504Scene";
 import { NotebookScene } from "@/room0/scenes/NotebookScene";
+import { FrontDeskScene } from "@/room0/scenes/FrontDeskScene";
 
 function Scene() {
   const { game } = useGame();
@@ -19,6 +20,8 @@ function Scene() {
       return <Room504Scene />;
     case "notebook":
       return <NotebookScene />;
+    case "frontdesk":
+      return <FrontDeskScene />;
     case "map":
     default:
       return <FloorMapScene />;

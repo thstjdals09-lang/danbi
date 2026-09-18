@@ -1380,3 +1380,194 @@
   border-style: dashed;
 }
 
+
+/* ==========================================================================
+   CASE 01 — FRONT DESK / KEY CONTROL / SWITCHBOARD / TELEPHONE
+   ========================================================================== */
+
+/* 프런트에서 울림이 감지될 때 */
+.r0-desk__signal {
+  position: absolute;
+  left: 18%;
+  top: 56%;
+  width: 28%;
+  height: 12%;
+  pointer-events: none;
+  border: 1px solid rgba(196, 103, 74, 0.5);
+  animation: r0-pulse 1.6s ease-in-out infinite;
+}
+@keyframes r0-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.7; }
+}
+.r0-desk__note {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 8px;
+  margin: 0;
+  padding: 6px 9px;
+  background: rgba(10, 11, 8, 0.9);
+  border-left: 2px solid var(--alert);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--alert);
+}
+
+/* ---------- 행정 기록 문서 (SYSTEM SPACE) ---------- */
+
+.r0-doc { width: 100%; border: 1px solid var(--line-2); background: var(--ground); }
+.r0-doc__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  color: var(--text);
+}
+.r0-doc__sub { font-size: 8.5px; letter-spacing: 0.16em; color: var(--faint); }
+.r0-doc__rows { list-style: none; margin: 0; padding: 0; }
+.r0-doc__rows li { border-bottom: 1px solid var(--line); }
+.r0-doc__rows li:last-child { border-bottom: 0; }
+.r0-doc__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  text-align: left;
+}
+.r0-doc__no { font-size: 14px; letter-spacing: 0.14em; color: var(--text); }
+.r0-doc__state { font-size: 9px; letter-spacing: 0.16em; color: var(--faint); }
+.r0-doc__row[data-odd="true"] .r0-doc__state { color: var(--dim); }
+.r0-doc__row:active { background: var(--panel-2); }
+.r0-doc__foot {
+  margin: 0;
+  padding: 9px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.r0-route { width: 100%; border-collapse: collapse; }
+.r0-route th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 8.5px;
+  letter-spacing: 0.24em;
+  font-weight: 400;
+  color: var(--faint);
+  border-bottom: 1px solid var(--line);
+}
+.r0-route td {
+  padding: 10px 12px;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  border-bottom: 1px solid var(--line);
+}
+.r0-route tr[data-blank="true"] td { color: var(--faint); }
+.r0-doc__take {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--brass);
+  background: var(--panel-2);
+}
+
+/* ---------- 열쇠 보관함 ---------- */
+
+.r0-cab { width: 100%; border: 1px solid var(--line-2); }
+.r0-cab__plate {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--mono);
+  font-size: 2.6cqw;
+  letter-spacing: 0.06em;
+  color: #2a220f;
+  text-shadow: 0 1px 0 rgba(255, 230, 170, 0.25);
+  pointer-events: none;
+}
+
+/* ---------- 전화기 키패드 ---------- */
+
+.r0-dial { width: 100%; }
+.r0-dial__pad {
+  position: relative;
+  width: 100%;
+  /* 잘라낸 영역의 실제 가로세로비 — 사진이 찌그러지지 않는다 */
+  aspect-ratio: 0.878;
+  background-repeat: no-repeat;
+  border: 1px solid var(--line-2);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  /* 사진 속 버튼 영역에 그리드를 맞춘다 */
+  padding: 9.8% 20.4% 11.5% 12.4%;
+  gap: 0;
+}
+.r0-dial__key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: #3a3024;
+  text-shadow: 0 1px 0 rgba(255, 245, 220, 0.35);
+  border-radius: 2px;
+}
+.r0-dial__key[data-fn="true"] { font-size: 9px; letter-spacing: 0.12em; }
+.r0-dial__key:active { background: rgba(60, 46, 20, 0.22); }
+.r0-dial[data-calling="true"] .r0-dial__key { opacity: 0.45; }
+
+.r0-dial__window {
+  margin-top: 10px;
+  border: 1px solid var(--line-2);
+  background: #10120b;
+  padding: 10px 12px;
+  text-align: center;
+}
+.r0-dial__entry { font-size: 22px; letter-spacing: 0.34em; color: var(--phos); font-variant-numeric: tabular-nums; }
+
+/* ---------- 울리는 객실 전화기 ---------- */
+
+.r0-room__ring {
+  position: absolute;
+  left: 8%;
+  top: 42%;
+  width: 17%;
+  height: 13%;
+  pointer-events: none;
+  border: 1px solid rgba(232, 214, 152, 0.45);
+  animation: r0-pulse 1.1s ease-in-out infinite;
+}
+
+.r0-phoneshot { position: relative; width: 100%; border: 1px solid var(--line-2); }
+.r0-phoneshot img { display: block; width: 100%; height: auto; }
+.r0-phoneshot[data-ringing="true"] { animation: r0-shudder 420ms ease-out infinite; }
+.r0-phoneshot__ring {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  background: rgba(10, 11, 8, 0.85);
+  border: 1px solid var(--alert);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--alert);
+}
+
+.r0-detail__close--act { border-color: var(--brass); color: var(--brass); }
+
+/* 도면 위의 작은 표시 */
+.r0-plan__gf { fill: var(--brass-dim); font-size: 7px; letter-spacing: 0.14em; text-anchor: middle; }
+.r0-plan__ring { fill: var(--alert); font-size: 9px; letter-spacing: 0.1em; text-anchor: middle; animation: r0-blink 1.2s steps(1) infinite; }

@@ -2,7 +2,7 @@
    Location / Scene / Puzzle / Evidence / Record / Case 는 서로 분리되어 있고,
    CASE 01~09 추가 시 데이터 파일만 늘어나도록 설계한다. */
 
-export type SceneId = "boot" | "map" | "cctv" | "discovery" | "room504" | "notebook";
+export type SceneId = "boot" | "map" | "cctv" | "discovery" | "room504" | "notebook" | "frontdesk";
 
 export type CaseId =
   | "case00" | "case01" | "case02" | "case03" | "case04"
@@ -143,7 +143,12 @@ export type Stage =
   | "ROOM_504_ENTERED"
   | "EVIDENCE_COLLECTED"
   | "NOTEBOOK_LINKED"
-  | "CASE_00_CLOSED";
+  | "CASE_00_CLOSED"
+  | "CASE_01_OPEN"
+  | "CASE_01_PATTERN"
+  | "CASE_01_RINGING"
+  | "CASE_01_ANSWERED"
+  | "CASE_01_CLOSED";
 
 export interface GameState {
   schemaVersion: number;
@@ -168,6 +173,17 @@ export interface GameState {
   clockMarkTapCount: number;
   clockMarkFound: boolean;
   notebookUnlocked: boolean;
+
+  /* CASE 01 진행 플래그 */
+  frontDeskUnlocked: boolean;
+  keyLogOpened: boolean;
+  key3317Inspected: boolean;
+  cabinetInspected: boolean;
+  routingInspected: boolean;
+  /* 걸어 본 내선 번호 */
+  dialed: string[];
+  phoneRinging: boolean;
+  phoneAnswered: boolean;
 
   /* 누적 기록 */
   evidenceCollected: EvidenceId[];

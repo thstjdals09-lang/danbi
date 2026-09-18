@@ -8,7 +8,9 @@
 - 기준 뷰포트 390×844. 360×740 ~ 430×932 대응.
 - 기획서: `ROOM_0_개발_기획서_v0.1` (Source of Truth)
 
-## 지금 플레이할 수 있는 것 — CASE 00: THE MISSING ROOM
+## 지금 플레이할 수 있는 것 — CASE 00 · CASE 01
+
+### CASE 00 — THE MISSING ROOM
 
 ```
 BOOT → 5F MAP → 503/505 사이 벽 3회 조사 → 04:17
@@ -22,6 +24,32 @@ BOOT → 5F MAP → 503/505 사이 벽 3회 조사 → 04:17
 
 퍼즐을 풀면 `CORRECT` 가 뜨는 대신 **세계가 바뀐다**: 층 기록이 덮어써지고, 도면에 방이 생기고,
 도면 개정 번호와 유닛 수가 변하고, 사건 파일에 결론이 남는다.
+
+### CASE 01 — THE KEY THAT DOESN'T EXIST
+
+```
+CASE 00 종결 → KEY CONTROL ARCHIVE 개방 → 도면의 승강기로 1층 프런트
+     → 열쇠 반납 기록에서 객실 번호가 아닌 3317 발견 → 조회해도 시스템이 모른다
+     → 열쇠 보관함: 그 번호를 단 열쇠가 없다 (가운데 자리는 번호판까지 비어 있다)
+     → 교환대 배선표: 3314 · 3315 · 3316 · [빈 줄] · 3318 · 3319
+     → 프런트 전화기로 직접 건다 (다른 번호도 전부 응답한다)
+     → 3317 → 건물 어딘가에서 벨이 울린다. 어디인지는 알려주지 않는다
+     → 5층 504호로 직접 올라가면 그 방의 전화기가 울리고 있다
+     → 수화기를 든다 → 잡음 → 짧은 클릭 → 끊김 → EXT 3317 / ROOM 504 기록
+     → NOTEBOOK: WHAT IS 3317? → HYPOTHESIS SUPPORTED → 남은 질문
+```
+
+**CASE 01 의 결론**: 3317 은 열쇠 번호가 아니라 504호의 내부 전화번호다. 건물 기록은 504호를 지웠지만
+교환기는 아직 그 방으로 회선을 연결한다. 마지막에 남는 질문은
+`WHY DOES THE SWITCHBOARD REMEMBER A ROOM THE PROPERTY RECORD FORGOT?` 이다.
+
+- 3317 은 CASE 00 에서 "다음 사건용" 이라고 알려주지 않은 채 남겨 둔 값이다. CASE 01 에서 다시
+  만났을 때 플레이어가 스스로 기억해 내야 한다.
+- 전화기는 숫자 자물쇠가 아니다. 3314~3319 를 걸면 각 객실이 실제로 응답하고(NO ANSWER /
+  LINE DISCONNECTED), 없는 번호는 `INVALID INTERNAL EXTENSION` 이 된다.
+- 어디서 울리는지 게임이 말해 주지 않는다. 지도에는 아주 작은 울림 표시만 나온다 (퀘스트 화살표 없음).
+- 소리를 꺼도 진행할 수 있다: `RING SIGNAL DETECTED` 가 화면에 남는다.
+- CASE 01 의 안내 강도는 `reduced` — 슬롯은 영문 질문만 보여 준다.
 
 ## Notebook — Hypothesis Workspace
 
@@ -61,6 +89,9 @@ PROPERTY RECORD.` 이고, 세 칸을 요구한다.
   조사 기록 안의 한 항목이다.
 - 기록 ↔ 기록 직접 대조(`CROSS-REFERENCE`)는 기록을 펼쳤을 때의 작은 보조 도구로만 존재한다.
   메인 CTA 가 아니며, 관계가 없으면 `NO DIRECT RELATION ESTABLISHED.` 라고만 답한다.
+
+CASE 01 의 가설은 CLAIM / CONTRADICTION / PROOF 세 칸이며, 이 값이 어느 기록에 들어 있었는지 ·
+그 분류와 무엇이 맞지 않는지 · 회선이 무엇을 증명했는지를 묻는다.
 
 가설은 `src/room0/data/hypotheses.ts` 의 데이터다. CASE 01~09 는 이 배열에 항목을 추가하면
 같은 시스템을 그대로 쓴다 (question · guidance · slots(ask/askKo/accepts/reject) · statement ·
@@ -103,6 +134,10 @@ src/room0/
 | `504/photo-front.webp` | 4:3 / 1400×1050 | 액자 확대 — 앞면 | 사진 속에는 지금 없는 벽시계가 있다 |
 | `504/photo-back.webp` | 4:3 / 1200×900 | 액자 확대 — 뒷면 | 연필로 OCT 17, 1987 |
 | `504/clock-mark.webp` | 1:1 / 1100×1100 | 벽의 자국 확대 | 여기서 02:13 을 읽는다 |
+| `frontdesk/desk.webp` | 3:4 / 1200×1600 | FRONT DESK 메인 장면 (CASE 01) | 전화기 · 장부 · 카드 색인 · 열쇠 선반이 한 장에 |
+| `frontdesk/cabinet.webp` | 4:3 / 1400×1050 | 열쇠 보관함 확대 | 번호판은 비워 두고 코드가 502/503/—/505/506 을 얹는다 |
+| `frontdesk/phone.webp` | 3:4 / 1200×1600 | 프런트 전화기 | 키패드 영역만 잘라 확대해 실제 버튼을 누른다 |
+| `504/phone-detail.webp` | 4:3 / 1400×1050 | 504호 전화기 확대 | CASE 01 에서 이 전화가 울린다 |
 
 각 에셋의 아트 디렉션 사양은 `SCENE_ASSETS` 의 `brief` 필드에 문장으로 들어 있다. 이것이 재제작 사양이다.
 파일을 지우거나 못 불러오면 코드가 플레이스홀더로 대체하고 화면에 `TODO ASSET — <경로>` 를 표시하므로,

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGame } from "@/room0/state/GameProvider";
 import { SCENE_ASSETS, asset } from "@/room0/assets";
 import { Hotspot, SceneImage, patchStyle } from "@/room0/components/SceneImage";
+import { roomTone } from "@/room0/fx/audio";
 
 /* ROOM 504 — 한 장의 실제 공간 사진 위에서 조사가 일어난다.
    코드는 방을 그리지 않는다. 터치 영역과 확대 화면만 담당한다.
@@ -51,6 +52,16 @@ export function Room504Scene() {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [flipped, setFlipped] = useState(false);
   const [clockOpen, setClockOpen] = useState(false);
+  const [phoneOpen, setPhoneOpen] = useState(false);
+  const [lifted, setLifted] = useState(false);
+
+  /* 울리는 동안에만 벨이 이어진다 */
+  useEffect(() => {
+    if (!game.phoneRinging) return;
+    roomTone.call("near");
+    const id = window.setInterval(() => roomTone.call("near"), 4200);
+    return () => window.clearInterval(id);
+  }, [game.phoneRinging]);
 
   const inspect = (s: Spot) => {
     fx("tap", "touch");
@@ -84,6 +95,11 @@ export function Room504Scene() {
   };
 
   const tapPhone = () => {
+    if (game.phoneRinging || game.phoneAnswered) {
+      fx("tap", "touch");
+      setPhoneOpen(true);
+      return;
+    }
     fx("deny", "touch");
     dispatch({ type: "room/phone" });
   };
@@ -103,6 +119,7 @@ export function Room504Scene() {
             {/* 시계는 이 방에 없다 */}
             <span className="r0-ps__patch r0-ps__patch--soft" style={patchStyle(SCENE_ASSETS.room, CLOCK_PATCH, CLOCK_SOURCE)} />
             {/* 걸려 있던 자리에 남은 자국 */}
+            {game.phoneRinging && <span className="r0-room__ring" aria-hidden />}
             <span
               className="r0-room__ghost"
               data-seen={game.clockMarkTapCount > 0 ? "true" : undefined}
@@ -169,6 +186,56 @@ export function Room504Scene() {
             >
               PUT IT BACK
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 전화기 — CASE 01 에서 이 전화가 울린다 */}
+      {phoneOpen && (
+        <div className="r0-detail" role="dialog" aria-modal="true" aria-label="객실 전화기">
+          <div className="r0-detail__scrim" onClick={() => setPhoneOpen(false)} />
+          <div className="r0-detail__stage r0-detail__stage--wide">
+            <div className="r0-phoneshot" data-ringing={game.phoneRinging && !lifted ? "true" : undefined}>
+              <img src={asset(SCENE_ASSETS.roomPhone.file)} alt="" draggable={false} />
+              {game.phoneRinging && !lifted && <span className="r0-phoneshot__ring">RINGING</span>}
+            </div>
+            <p className="r0-detail__read">EXT 3317</p>
+            <p className="r0-detail__hint">
+              {lifted
+                ? "SILENCE. THEN A CLICK, SOMEWHERE DOWN THE LINE."
+                : game.phoneRinging
+                  ? "THE BELL IS INSIDE THIS ROOM."
+                  : "THE LINE IS DEAD AGAIN."}
+            </p>
+            {game.phoneRinging && !lifted && (
+              <button
+                type="button"
+                className="r0-detail__close r0-detail__close--act"
+                onClick={() => {
+                  setLifted(true);
+                  roomTone.call("static");
+                  fx(null, "clue");
+                  window.setTimeout(() => {
+                    roomTone.call("disconnect");
+                    dispatch({ type: "room/answerPhone" });
+                  }, 2200);
+                }}
+              >
+                LIFT THE RECEIVER
+              </button>
+            )}
+            {(!game.phoneRinging || lifted) && (
+              <button
+                type="button"
+                className="r0-detail__close"
+                onClick={() => {
+                  fx("tap", "touch");
+                  setPhoneOpen(false);
+                }}
+              >
+                PUT IT BACK
+              </button>
+            )}
           </div>
         </div>
       )}

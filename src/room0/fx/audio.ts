@@ -108,6 +108,143 @@ class RoomTone {
     this.master.gain.setTargetAtTime(this.muted ? 0 : 1, t, 0.08);
   }
 
+  /** 전화 키패드 — 실제 DTMF 두 음. */
+  dtmf(key: string): void {
+    const ctx = this.ctx;
+    const master = this.master;
+    if (!ctx || !master || this.muted) return;
+    const PAIRS: Record<string, [number, number]> = {
+      "1": [697, 1209], "2": [697, 1336], "3": [697, 1477],
+      "4": [770, 1209], "5": [770, 1336], "6": [770, 1477],
+      "7": [852, 1209], "8": [852, 1336], "9": [852, 1477],
+      "0": [941, 1336],
+    };
+    const pair = PAIRS[key];
+    if (!pair) return;
+    const t = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.055, t + 0.01);
+    gain.gain.setValueAtTime(0.055, t + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    gain.connect(master);
+    for (const f of pair) {
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = f;
+      osc.connect(gain);
+      osc.start(t);
+      osc.stop(t + 0.18);
+    }
+  }
+
+  /** 통화 상태음. ringback / distant(멀리서 울리는 벨) / near / disconnect / static */
+  call(kind: "ringback" | "distant" | "near" | "disconnect" | "static"): void {
+    const ctx = this.ctx;
+    const master = this.master;
+    if (!ctx || !master || this.muted) return;
+    const t0 = ctx.currentTime;
+
+    const ringPair = (at: number, dur: number, peak: number, cutoff: number) => {
+      const gain = ctx.createGain();
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = cutoff;
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(peak, at + 0.03);
+      gain.gain.setValueAtTime(peak, at + dur - 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      gain.connect(lp).connect(master);
+      for (const f of [440, 480]) {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = f;
+        osc.connect(gain);
+        osc.start(at);
+        osc.stop(at + dur + 0.02);
+      }
+    };
+
+    /* 실제 벨 — 두 음을 빠르게 두드린다 */
+    const bell = (at: number, peak: number, cutoff: number) => {
+      const gain = ctx.createGain();
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = cutoff;
+      const trem = ctx.createOscillator();
+      const tremGain = ctx.createGain();
+      trem.frequency.value = 20;
+      tremGain.gain.value = peak;
+      trem.connect(tremGain.gain);
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(peak, at + 0.02);
+      gain.gain.setValueAtTime(peak, at + 0.85);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 1.0);
+      gain.connect(lp).connect(master);
+      for (const f of [1050, 1370]) {
+        const osc = ctx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.value = f;
+        osc.connect(gain);
+        osc.start(at);
+        osc.stop(at + 1.02);
+      }
+      trem.start(at);
+      trem.stop(at + 1.02);
+    };
+
+    const click = (at: number, peak: number) => {
+      const src = ctx.createBufferSource();
+      const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.06), ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i += 1) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) ** 3;
+      src.buffer = buf;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 900;
+      const g = ctx.createGain();
+      g.gain.value = peak;
+      src.connect(bp).connect(g).connect(master);
+      src.start(at);
+    };
+
+    switch (kind) {
+      case "ringback":
+        ringPair(t0 + 0.2, 1.1, 0.03, 1200);
+        ringPair(t0 + 1.8, 1.1, 0.03, 1200);
+        break;
+      case "distant":
+        /* 건물 어딘가에서 울린다 — 작고 어둡게 */
+        bell(t0 + 0.1, 0.012, 700);
+        bell(t0 + 2.0, 0.012, 700);
+        break;
+      case "near":
+        bell(t0, 0.075, 4200);
+        bell(t0 + 2.0, 0.075, 4200);
+        break;
+      case "static": {
+        const src = ctx.createBufferSource();
+        const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 2.2), ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i += 1) d[i] = (Math.random() * 2 - 1) * 0.5;
+        src.buffer = buf;
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 1800;
+        bp.Q.value = 0.7;
+        const g = ctx.createGain();
+        g.gain.value = 0.02;
+        src.connect(bp).connect(g).connect(master);
+        src.start(t0);
+        break;
+      }
+      case "disconnect":
+      default:
+        click(t0, 0.08);
+        break;
+    }
+  }
+
   /** 짧은 시스템 반응음. */
   cue(name: Cue): void {
     const ctx = this.ctx;

@@ -49,6 +49,49 @@ export const HYPOTHESES: HypothesisDef[] = [
     followupQuestion: "WHO REMOVED ROOM 504 FROM THE RECORD?",
     followupQuestionKo: "누가 504호를 기록에서 지웠는가?",
   },
+  {
+    id: "hyp-case01",
+    caseId: "case01",
+    guidance: "reduced",
+    question: "WHAT IS 3317?",
+    questionKo: "3317은 무엇인가?",
+    slots: [
+      {
+        id: "claim",
+        label: "CLAIM",
+        ask: "Where is this value filed?",
+        askKo: "이 값은 어느 기록에 들어 있는가?",
+        accepts: ["key-3317"],
+        reject: "THIS IS NOT WHERE THE VALUE IS FILED.",
+      },
+      {
+        id: "contradiction",
+        label: "CONTRADICTION",
+        ask: "What does not fit that filing?",
+        askKo: "그 분류와 맞지 않는 것은 무엇인가?",
+        accepts: ["cabinet-3317", "routing-3314"],
+        reject: "THIS DOES NOT CONTRADICT THE FILING.",
+      },
+      {
+        id: "proof",
+        label: "PROOF",
+        ask: "What did the line prove?",
+        askKo: "회선은 무엇을 증명했는가?",
+        accepts: ["line-3317"],
+        reject: "NOTHING HERE WAS CONFIRMED ON THE LINE.",
+      },
+    ],
+    statement: "3317 IS NOT A KEY NUMBER. IT IS ROOM 504'S INTERNAL EXTENSION.",
+    statementKo: "3317은 열쇠 번호가 아니다. 504호의 내부 전화번호다.",
+    finding: [
+      "3317 is Room 504's internal extension.",
+      "The key system misclassified the value.",
+      "The hotel switchboard still routes calls to Room 504.",
+    ],
+    status: "ROUTING ACTIVE",
+    followupQuestion: "WHY DOES THE SWITCHBOARD REMEMBER A ROOM THE PROPERTY RECORD FORGOT?",
+    followupQuestionKo: "건물 기록은 504호를 잊었는데, 왜 교환기는 아직 기억하고 있는가?",
+  },
 ];
 
 const BY_ID = new Map<HypothesisId, HypothesisDef>(HYPOTHESES.map((h) => [h.id, h]));

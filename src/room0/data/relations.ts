@@ -21,6 +21,18 @@ export const RELATIONS: RelationDef[] = [
     deduction: "THE CLOCK IN THE PHOTOGRAPH LEFT THE MARK ON THAT WALL. ROOM 504 STOPPED AT 02:13 ON OCT 17, 1987.",
     closesCase: "case00",
   },
+  {
+    id: "rel-3317-ext",
+    pair: ["key-3317", "ext-3317"],
+    caseId: "case01",
+    deduction: "THE VALUE IN THE KEY LOG AND THE NUMBER UNDER THE TELEPHONE DIAL ARE THE SAME.",
+  },
+  {
+    id: "rel-routing-504",
+    pair: ["routing-3314", "line-3317"],
+    caseId: "case01",
+    deduction: "THE GAP IN THE ROUTING TABLE AND THE CONNECTED LINE POINT AT THE SAME ROOM.",
+  },
 ];
 
 export function findRelation(a: EvidenceId, b: EvidenceId): RelationDef | undefined {

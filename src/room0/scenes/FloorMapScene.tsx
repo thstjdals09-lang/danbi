@@ -50,6 +50,12 @@ export function FloorMapScene() {
   };
 
   const tapSlot = (slot: PlanSlot) => {
+    /* CASE 00 이 정리되면 승강기로 1층 프런트에 내려갈 수 있다 */
+    if (slot.id === "elev" && game.frontDeskUnlocked) {
+      fx("door", "touch");
+      dispatch({ type: "scene/go", scene: "frontdesk" });
+      return;
+    }
     if (slot.id === "r504") {
       fx("door", "recover");
       dispatch({ type: "room/enter504" });
@@ -192,6 +198,16 @@ export function FloorMapScene() {
               {isRecoveredRoom && (
                 <text x={slot.x + slot.w / 2} y={slot.y + slot.h - 12} className="r0-plan__stamp">
                   NOT IN RECORD
+                </text>
+              )}
+              {slot.id === "elev" && game.frontDeskUnlocked && (
+                <text x={slot.x + slot.w / 2} y={slot.y + slot.h - 14} className="r0-plan__gf">
+                  GF — FRONT DESK
+                </text>
+              )}
+              {slot.id === "r504" && game.phoneRinging && (
+                <text x={slot.x + slot.w / 2} y={slot.y + 20} className="r0-plan__ring">
+                  ((( )))
                 </text>
               )}
             </g>

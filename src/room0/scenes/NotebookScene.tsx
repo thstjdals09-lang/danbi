@@ -12,7 +12,7 @@ import {
   slotKey,
 } from "@/room0/data/hypotheses";
 import { EvidenceMark } from "@/room0/components/EvidenceMark";
-import type { EvidenceDef, EvidenceId, EvidenceStatus } from "@/room0/state/types";
+import type { CaseId, EvidenceDef, EvidenceId, EvidenceStatus } from "@/room0/state/types";
 
 /* NOTEBOOK — 증거 짝맞추기가 아니라 조사자의 작업 공간.
    플레이어는 사건의 질문에 답하는 가설을 세우고, "왜 그렇게 생각하는가" 를 기록으로 채운다.
@@ -34,10 +34,10 @@ const STATUS_LABEL: Record<EvidenceStatus, string> = {
   used: "USED IN HYPOTHESIS",
 };
 
-export function NotebookScene() {
+function CaseBlock({ caseId }: { caseId: CaseId }) {
   const { game, dispatch, fx } = useGame();
-  const activeCase = caseById("case00");
-  const hypotheses = hypothesesForCase("case00");
+  const activeCase = caseById(caseId);
+  const hypotheses = hypothesesForCase(caseId);
   const hyp = hypotheses[0];
 
   const [openId, setOpenId] = useState<EvidenceId | null>(null);
@@ -92,22 +92,18 @@ export function NotebookScene() {
     setCrossRef(null);
   };
 
-  const establishedRelations = RELATIONS.filter((r) => game.relationsConfirmed.includes(r.id));
+  const establishedRelations = RELATIONS.filter((r) => r.caseId === caseId && game.relationsConfirmed.includes(r.id));
 
-  /* 조사 중 확보한 기록은 사건 구분 없이 같은 기록철에 남는다.
-     "다음 사건용" 같은 메타 표시는 하지 않는다 — 플레이어가 스스로 기억하게 둔다. */
-  const extra = EVIDENCE.filter((e) => !activeCase.evidenceIds.includes(e.id) && game.evidenceCollected.includes(e.id));
+  /* 이 사건의 기록철. 메타 표시는 하지 않는다 — 플레이어가 스스로 기억하게 둔다. */
+  const extra = EVIDENCE.filter(
+    (e) =>
+      !activeCase.evidenceIds.includes(e.id) &&
+      e.caseId === caseId &&
+      game.evidenceCollected.includes(e.id),
+  );
 
   return (
-    <div className="r0-scene r0-scene--note">
-      <div className="r0-note">
-        <div className="r0-note__head">
-          <span>INVESTIGATION RECORD</span>
-          <span>
-            {game.evidenceCollected.length} / {EVIDENCE.length} FILED
-          </span>
-        </div>
-
+    <>
         {/* ── 사건과 지금 묻고 있는 것 ───────────────────────────── */}
         <section className="r0-case">
           <span className="r0-case__no">CASE {activeCase.index}</span>
@@ -337,7 +333,6 @@ export function NotebookScene() {
             <p className="r0-open__qKo">{hyp.followupQuestionKo}</p>
           </section>
         )}
-      </div>
 
       {/* ── 가설 최종 확인 ─────────────────────────────────────── */}
       {review && (
@@ -383,6 +378,31 @@ export function NotebookScene() {
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export function NotebookScene() {
+  const { game } = useGame();
+  /* 도달한 사건만 기록철에 나타난다 */
+  const cases: CaseId[] = ["case00"];
+  if (game.frontDeskUnlocked || game.casesClosed.includes("case00")) cases.push("case01");
+
+  return (
+    <div className="r0-scene r0-scene--note">
+      <div className="r0-note">
+        <div className="r0-note__head">
+          <span>INVESTIGATION RECORD</span>
+          <span>
+            {game.evidenceCollected.length} / {EVIDENCE.length} FILED
+          </span>
+        </div>
+
+        {cases.map((id) => (
+          <CaseBlock key={id} caseId={id} />
+        ))}
+      </div>
+
     </div>
   );
 }
