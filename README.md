@@ -99,6 +99,12 @@ AvatarState { originPersona, currentIdentity, careerStage, equippedGear[], unloc
 - Rarity(디자인 등급 + 실제 보유율)와 Difficulty(★)는 별도 데이터입니다.
 - Earned(시험으로 획득)와 Cosmetic(`cosmetics[]`, 현재 비어 있음)은 분리됩니다.
 
+## ROOM 0 (별도 게임)
+
+같은 저장소 안에서 돌아가는 두 번째 게임. 모바일 웹 미스터리 퍼즐 「ROOM 0 — NULL HOTEL」.
+포커 제품과 코드·상태·스타일이 분리되어 있으며 서버나 DB를 쓰지 않는다.
+진입은 `/room0`, 문서는 [docs/ROOM0.md](docs/ROOM0.md).
+
 ## 구조
 
 ```

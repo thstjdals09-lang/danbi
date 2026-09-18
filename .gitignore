@@ -27,8 +27,8 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 
-# Local database
-data/
+# Local database (repo root only — src/**/data 는 게임 데이터라 커밋한다)
+/data/
 
 # Private planning docs (never commit)
 private/

@@ -9,6 +9,7 @@ import { listCollectibles } from "@/lib/repo/collection";
 import { logoutAction } from "@/app/(auth)/actions";
 import { lockDevAction } from "@/app/dev/actions";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteChrome } from "@/components/SiteChrome";
 import { Pfp } from "@/components/Pfp";
 import "./globals.css";
 
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="ko" className={`${cormorant.variable} ${inter.variable} ${notoSansKr.variable} ${notoSerifKr.variable}`}>
       <body>
+        <SiteChrome>
         <header className="site-header">
           <div className="shell site-header__inner">
             <Link href="/" className="brand" aria-label={APP_NAME}>
@@ -73,9 +75,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </div>
         </header>
+        </SiteChrome>
 
         <main>{children}</main>
 
+        <SiteChrome>
         <footer className="site-footer">
           <div className="shell site-footer__inner">
             <span className="eyebrow eyebrow--ink">{APP_NAME}</span>
@@ -83,7 +87,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <span className="eyebrow">{TAGLINE}</span>
           </div>
         </footer>
+        </SiteChrome>
 
+        <SiteChrome>
         {devEnabled && !devUnlocked && (
           <Link href="/dev/unlock" className="dev-fab">Developer mode</Link>
         )}
@@ -97,6 +103,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </form>
           </div>
         )}
+        </SiteChrome>
       </body>
     </html>
   );
