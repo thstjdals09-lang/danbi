@@ -11,15 +11,14 @@ const COLD_BOOT: Line[] = [
   { text: "REV 4.11 / TERMINAL 3 / WEST DESK", kind: "dim" },
   { text: "", kind: "gap" },
   { text: "POWER ON SELF TEST .......... OK" },
-  { text: "STORAGE 84MB ................ OK" },
   { text: "GUEST INDEX ................. PARTIAL" },
   { text: "SURVEILLANCE ARCHIVE ........ MOUNTED" },
-  { text: "FLOOR RECORDS ............... RECOVERING", pause: 900 },
+  { text: "FLOOR RECORDS ............... RECOVERING", pause: 620 },
   { text: "", kind: "gap" },
-  { text: "67 ROOMS FOUND.", pause: 700 },
-  { text: "1 ROOM UNACCOUNTED FOR.", pause: 1100 },
+  { text: "67 ROOMS FOUND.", pause: 640 },
+  { text: "1 ROOM UNACCOUNTED FOR.", pause: 900 },
   { text: "", kind: "gap" },
-  { text: "DO NOT ENTER ROOM 504.", kind: "warn", pause: 1600 },
+  { text: "DO NOT ENTER ROOM 504.", kind: "warn", pause: 1700 },
 ];
 
 const WARM_BOOT: Line[] = [
@@ -50,11 +49,11 @@ export function BootScene() {
       const t = window.setTimeout(() => {
         if (!restored) setErased(true);
         setReady(true);
-      }, restored ? 400 : 1200);
+      }, restored ? 350 : 260);
       return () => window.clearTimeout(t);
     }
     const line = script[shown];
-    const delay = line.pause ?? (line.kind === "gap" ? 90 : 190);
+    const delay = line.pause ?? (line.kind === "gap" ? 80 : 130);
     timer.current = window.setTimeout(() => setShown((n) => n + 1), delay);
     return () => {
       if (timer.current) window.clearTimeout(timer.current);

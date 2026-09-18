@@ -24,12 +24,24 @@ await build({
   target: ["es2020", "safari15"],
   jsx: "automatic",
   alias: { "@": path.join(root, "src") },
-  define: { "process.env.NODE_ENV": '"production"' },
+  define: {
+    "process.env.NODE_ENV": '"production"',
+    // 정적 사이트에서는 번들 옆의 assets/ 를 쓴다 (GitHub Pages 같은 하위 경로에서도 동작)
+    __ROOM0_ASSET_BASE__: '"./assets/room0/"',
+  },
   legalComments: "none",
   logLevel: "info",
 });
 
 fs.copyFileSync(path.join(root, "src", "room0", "room0.css"), path.join(outdir, "room0.css"));
+
+/* 씬 에셋을 번들 옆으로 복사한다 */
+const assetSrc = path.join(root, "public", "assets", "room0");
+if (fs.existsSync(assetSrc)) {
+  fs.cpSync(assetSrc, path.join(outdir, "assets", "room0"), { recursive: true });
+} else {
+  console.warn("WARNING: public/assets/room0 not found — 장면 이미지 없이 빌드된다");
+}
 
 const html = `<!doctype html>
 <html lang="ko">
