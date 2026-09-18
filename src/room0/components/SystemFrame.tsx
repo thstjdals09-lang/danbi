@@ -68,7 +68,7 @@ export function SystemFrame({ children }: { children: React.ReactNode }) {
     (scene === "cctv" && game.cctvUnlocked && !game.cctv0417Observed) ||
     (scene === "notebook" &&
       game.evidenceCollected.length >= 2 &&
-      game.relationsConfirmed.length === 0);
+      game.hypothesesConfirmed.length === 0);
 
   const go = (scene: SceneId) => {
     if (locked(scene)) {

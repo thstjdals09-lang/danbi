@@ -60,7 +60,7 @@ export function AssistPanel({ stage, onClose }: { stage: Stage; onClose: () => v
         <div className="r0-sheet__foot">
           <span>
             사용한 안내 {Object.values(game.hintsUsed).reduce((a, b) => a + (b ?? 0), 0)}줄 · 기록{" "}
-            {game.evidenceCollected.length}건 · 연결 {game.relationsConfirmed.length}건
+            {game.evidenceCollected.length}건 · 가설 {game.hypothesesConfirmed.length}건
           </span>
           <button
             type="button"

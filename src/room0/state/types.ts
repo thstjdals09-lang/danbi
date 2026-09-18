@@ -24,7 +24,16 @@ export interface EvidenceDef {
   caseId: CaseId;
   /** 카드를 펼쳤을 때의 기록 원문 */
   note: string;
+  /** 출처 종류 — Notebook 에서 기록마다 다른 형태로 보이게 한다 */
+  kind: EvidenceKind;
+  /** CASE 00 가설로는 설명되지 않는 기록. 장기 미스터리로 남긴다 */
+  unresolved?: boolean;
 }
+
+export type EvidenceKind = "plan" | "cctv" | "photo" | "record" | "field" | "object";
+
+/** Notebook 에 표시되는 기록의 상태 */
+export type EvidenceStatus = "locked" | "unreviewed" | "reviewed" | "unresolved" | "used";
 
 /** 두 단서 사이의 관계. Notebook 의 추리 판정 기준. */
 export interface RelationDef {
@@ -35,6 +44,40 @@ export interface RelationDef {
   deduction: string;
   /** 이 관계가 확정되면 해당 CASE 가 종결된다 */
   closesCase?: CaseId;
+}
+
+export type HypothesisId = string;
+
+/** 가설의 한 칸. 플레이어는 여기에 "왜 그렇게 생각하는지"를 채운다. */
+export interface HypothesisSlotDef {
+  id: string;
+  /** 처음에는 추상적으로만 말한다. 정답을 지시하지 않는다 */
+  label: string;
+  /** 이 칸이 무엇을 요구하는지에 대한 한 줄 */
+  ask: string;
+  /** 이 칸을 충족시키는 기록들 (하나만 들어가면 된다) */
+  accepts: EvidenceId[];
+  /** 맞지 않는 기록을 넣었을 때의 시스템 반응 */
+  reject: string;
+}
+
+export interface HypothesisDef {
+  id: HypothesisId;
+  caseId: CaseId;
+  /** 이 사건이 지금 묻고 있는 것 */
+  question: string;
+  questionKo: string;
+  slots: HypothesisSlotDef[];
+  /** 근거가 갖춰졌을 때 플레이어가 확인하는 한 문장 */
+  statement: string;
+  statementKo: string;
+  /** 검증 후 사건 파일에 남는 기록 */
+  finding: string[];
+  /** 검증해도 남는 것 — CASE 00 은 원인을 밝히지 못한다 */
+  status: string;
+  /** 다음 조사로 이어지는 질문 */
+  followupQuestion: string;
+  followupQuestionKo: string;
 }
 
 export type CaseStatus = "sealed" | "open" | "closed";
@@ -50,6 +93,8 @@ export interface CaseDef {
   teaser: string;
   evidenceIds: EvidenceId[];
   relationIds: RelationId[];
+  /** 이 사건에서 세울 수 있는 가설 */
+  hypothesisIds?: HypothesisId[];
 }
 
 /** 평면도 위의 한 구획. 객실 / 벽 / 설비 모두 같은 구조로 다룬다. */
@@ -119,6 +164,14 @@ export interface GameState {
 
   /* 누적 기록 */
   evidenceCollected: EvidenceId[];
+  /** 카드를 펼쳐 내용을 읽은 기록 */
+  evidenceReviewed: EvidenceId[];
+  /** 가설 칸에 배치된 기록. 키는 `${hypothesisId}:${slotId}` */
+  hypothesisSlots: Record<string, EvidenceId>;
+  /** 근거가 갖춰져 검증된 가설 */
+  hypothesesConfirmed: HypothesisId[];
+  /** 가설에 맞지 않는 기록을 넣어본 횟수 (페널티 없음, 기록만 남긴다) */
+  hypothesisRejected: number;
   relationsConfirmed: RelationId[];
   relationsRejected: number;
   discoveries: LocationId[];

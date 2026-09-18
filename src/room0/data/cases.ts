@@ -8,7 +8,8 @@ export const CASES: CaseDef[] = [
     title: "THE MISSING ROOM",
     question: "WHERE IS ROOM 504?",
     teaser: "ONE ROOM UNACCOUNTED FOR.",
-    evidenceIds: ["wall-0417", "cam-05w", "cctv-504-door", "room-504", "photo-1987", "clock-0213"],
+    evidenceIds: ["plan-5fw", "wall-0417", "cam-05w", "cctv-504-door", "room-504", "photo-1987", "clock-0213"],
+    hypothesisIds: ["hyp-case00"],
     relationIds: ["rel-0417-cam", "rel-door-room", "rel-photo-clock"],
   },
   {
@@ -19,6 +20,7 @@ export const CASES: CaseDef[] = [
     teaser: "KEY INDEX 5F — 3317 NOT ISSUED. SWITCHBOARD DISAGREES.",
     evidenceIds: ["ext-3317"],
     relationIds: [],
+    hypothesisIds: [],
   },
   { id: "case02", index: "02", title: "ROOM 504", question: "WHO WAS IN THE ROOM?", teaser: "SEALED.", evidenceIds: [], relationIds: [] },
   { id: "case03", index: "03", title: "THE MANAGER", question: "HOW LONG HAS HE WORKED HERE?", teaser: "SEALED.", evidenceIds: [], relationIds: [] },

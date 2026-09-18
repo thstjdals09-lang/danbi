@@ -1,7 +1,8 @@
 import { evidenceById } from "@/room0/data/evidence";
 import { findRelation } from "@/room0/data/relations";
 import { planSlot } from "@/room0/data/locations";
-import type { CaseId, EvidenceId, GameState, SceneId, Stage } from "@/room0/state/types";
+import { hypothesisById, hypothesisSatisfied, slotKey } from "@/room0/data/hypotheses";
+import type { CaseId, EvidenceId, GameState, HypothesisId, SceneId, Stage } from "@/room0/state/types";
 
 export const SCHEMA_VERSION = 1;
 
@@ -28,6 +29,10 @@ export const INITIAL_GAME: GameState = {
   notebookUnlocked: false,
 
   evidenceCollected: [],
+  evidenceReviewed: [],
+  hypothesisSlots: {},
+  hypothesesConfirmed: [],
+  hypothesisRejected: 0,
   relationsConfirmed: [],
   relationsRejected: 0,
   discoveries: [],
@@ -74,6 +79,10 @@ export type Action =
   | { type: "room/photoFlip" }
   | { type: "room/clockTap" }
   | { type: "room/phone" }
+  | { type: "note/review"; id: EvidenceId }
+  | { type: "note/assign"; hypothesisId: HypothesisId; slotId: string; evidenceId: EvidenceId }
+  | { type: "note/unassign"; hypothesisId: HypothesisId; slotId: string }
+  | { type: "note/confirm"; hypothesisId: HypothesisId }
   | { type: "note/test"; a: EvidenceId; b: EvidenceId }
   | { type: "hint/use"; stage: Stage }
   | { type: "audio/toggleMute" }
@@ -149,6 +158,7 @@ export function reducer(state: Room0State, action: Action): Room0State {
         game: found,
         log: pushLog(state, "SCRATCHED INTO THE PLASTER. FOUR DIGITS.", "alert"),
       };
+      next = grant(next, next.game, "plan-5fw");
       next = grant(next, next.game, "wall-0417");
       return { ...next, log: pushLog(next, "ARCHIVE REVIEW AVAILABLE — CAM 05-W", "alert") };
     }
@@ -249,34 +259,115 @@ export function reducer(state: Room0State, action: Action): Room0State {
       return grant(next, next.game, "ext-3317");
     }
 
+    /* 기록을 펼쳐 읽었다 */
+    case "note/review":
+      if (g.evidenceReviewed.includes(action.id)) return state;
+      return { ...state, game: { ...g, evidenceReviewed: [...g.evidenceReviewed, action.id] } };
+
+    /* 가설의 한 칸에 기록을 배치한다. 맞지 않으면 시스템이 이유를 말할 뿐, 틀렸다고 하지 않는다. */
+    case "note/assign": {
+      const def = hypothesisById(action.hypothesisId);
+      const slot = def?.slots.find((s) => s.id === action.slotId);
+      if (!def || !slot) return state;
+
+      if (!slot.accepts.includes(action.evidenceId)) {
+        const ev = evidenceById(action.evidenceId);
+        const reason = ev?.unresolved
+          ? "NO DIRECT CONFLICT FOUND. THIS ENTRY REMAINS UNRESOLVED."
+          : slot.reject;
+        return {
+          ...state,
+          game: { ...g, hypothesisRejected: g.hypothesisRejected + 1 },
+          log: pushLog(state, reason, "sys"),
+        };
+      }
+
+      /* 같은 기록이 다른 칸에 들어가 있으면 옮긴다 */
+      const slots: Record<string, EvidenceId> = { ...g.hypothesisSlots };
+      for (const [k, v] of Object.entries(slots)) {
+        if (v === action.evidenceId && k.startsWith(`${def.id}:`)) delete slots[k];
+      }
+      slots[slotKey(def.id, slot.id)] = action.evidenceId;
+
+      const game: GameState = { ...g, hypothesisSlots: slots };
+      const ready = hypothesisSatisfied(def, slots);
+      let next: Room0State = {
+        ...state,
+        game,
+        log: pushLog(state, `${slot.label} — ENTRY ACCEPTED.`, "record"),
+      };
+      if (ready && !g.hypothesesConfirmed.includes(def.id)) {
+        next = { ...next, log: pushLog(next, "SUPPORT IS SUFFICIENT. HYPOTHESIS READY FOR REVIEW.", "alert") };
+      }
+      return next;
+    }
+
+    case "note/unassign": {
+      const key = slotKey(action.hypothesisId, action.slotId);
+      if (!(key in g.hypothesisSlots)) return state;
+      const slots = { ...g.hypothesisSlots };
+      delete slots[key];
+      return { ...state, game: { ...g, hypothesisSlots: slots }, log: pushLog(state, "ENTRY WITHDRAWN.", "sys") };
+    }
+
+    /* 가설 검증 — 세계 상태가 함께 갱신된다 */
+    case "note/confirm": {
+      const def = hypothesisById(action.hypothesisId);
+      if (!def) return state;
+      if (g.hypothesesConfirmed.includes(def.id)) return state;
+      if (!hypothesisSatisfied(def, g.hypothesisSlots)) {
+        return { ...state, log: pushLog(state, "INSUFFICIENT CORRELATION.", "sys") };
+      }
+
+      /* 가설에 채택된 기록들 사이의 관계는 시스템이 자동으로 정리한다 */
+      const used = def.slots
+        .map((s) => g.hypothesisSlots[slotKey(def.id, s.id)])
+        .filter((id): id is EvidenceId => Boolean(id));
+      const auto = new Set(g.relationsConfirmed);
+      for (let i = 0; i < used.length; i += 1) {
+        for (let j = i + 1; j < used.length; j += 1) {
+          const rel = findRelation(used[i], used[j]);
+          if (rel) auto.add(rel.id);
+        }
+      }
+
+      const casesClosed: CaseId[] = g.casesClosed.includes(def.caseId)
+        ? g.casesClosed
+        : [...g.casesClosed, def.caseId];
+
+      const game: GameState = {
+        ...g,
+        hypothesesConfirmed: [...g.hypothesesConfirmed, def.id],
+        relationsConfirmed: [...auto],
+        casesClosed,
+        currentCase: def.caseId === "case00" ? "case01" : g.currentCase,
+      };
+
+      let next: Room0State = { ...state, game, log: pushLog(state, "HYPOTHESIS SUPPORTED.", "record") };
+      next = { ...next, log: pushLog(next, def.statement, "record") };
+      next = { ...next, log: pushLog(next, `STATUS — ${def.status}`, "alert") };
+      next = { ...next, log: pushLog(next, def.followupQuestion, "alert") };
+      return next;
+    }
+
+    /* 참고용 교차 조회. 진행에는 관여하지 않는다. */
     case "note/test": {
       const rel = findRelation(action.a, action.b);
       if (!rel) {
         return {
           ...state,
           game: { ...g, relationsRejected: g.relationsRejected + 1 },
-          log: pushLog(state, "THE RECORD DOES NOT SUPPORT THAT.", "sys"),
+          log: pushLog(state, "NO DIRECT RELATION ESTABLISHED.", "sys"),
         };
       }
       if (g.relationsConfirmed.includes(rel.id)) {
         return { ...state, log: pushLog(state, "ALREADY ESTABLISHED.", "sys") };
       }
-      const casesClosed: CaseId[] =
-        rel.closesCase && !g.casesClosed.includes(rel.closesCase)
-          ? [...g.casesClosed, rel.closesCase]
-          : g.casesClosed;
-      const game: GameState = {
-        ...g,
-        relationsConfirmed: [...g.relationsConfirmed, rel.id],
-        casesClosed,
-        currentCase: rel.closesCase === "case00" ? "case01" : g.currentCase,
+      return {
+        ...state,
+        game: { ...g, relationsConfirmed: [...g.relationsConfirmed, rel.id] },
+        log: pushLog(state, rel.deduction, "record"),
       };
-      let next: Room0State = { ...state, game, log: pushLog(state, rel.deduction, "record") };
-      if (rel.closesCase) {
-        next = { ...next, log: pushLog(next, "CASE 00 CLOSED — FILE SEALED AND FORWARDED.", "alert") };
-        next = { ...next, log: pushLog(next, "INCOMING — KEY INDEX 5F: 3317 NOT ISSUED.", "alert") };
-      }
-      return next;
     }
 
     case "hint/use": {
@@ -305,7 +396,7 @@ export function reducer(state: Room0State, action: Action): Room0State {
 export function deriveStage(g: GameState): Stage {
   if (!g.bootCompleted) return "BOOT";
   if (g.casesClosed.includes("case00")) return "CASE_00_CLOSED";
-  if (g.relationsConfirmed.length > 0) return "NOTEBOOK_LINKED";
+  if (Object.keys(g.hypothesisSlots).length > 0) return "NOTEBOOK_LINKED";
   if (g.photoBackInspected && g.clockMarkFound) return "EVIDENCE_COLLECTED";
   if (g.room504Entered) return "ROOM_504_ENTERED";
   if (g.room504Recovered) return "ROOM_504_DISCOVERED";

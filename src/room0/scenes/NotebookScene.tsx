@@ -1,217 +1,395 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useGame } from "@/room0/state/GameProvider";
 import { EVIDENCE, evidenceById } from "@/room0/data/evidence";
-import { RELATIONS, findRelation } from "@/room0/data/relations";
 import { caseById } from "@/room0/data/cases";
-import type { CaseId, EvidenceId } from "@/room0/state/types";
+import { RELATIONS, findRelation } from "@/room0/data/relations";
+import {
+  hypothesesForCase,
+  hypothesisAvailable,
+  hypothesisSatisfied,
+  slotKey,
+} from "@/room0/data/hypotheses";
+import { EvidenceMark } from "@/room0/components/EvidenceMark";
+import type { EvidenceDef, EvidenceId, EvidenceStatus } from "@/room0/state/types";
 
-/* NOTEBOOK — 인벤토리가 아니라 추리판.
-   확정된 관계는 좌측 여백에 실로 남고, 이후 Deduction Board 로 확장된다. */
+/* NOTEBOOK — 증거 짝맞추기가 아니라 조사자의 작업 공간.
+   플레이어는 사건의 질문에 답하는 가설을 세우고, "왜 그렇게 생각하는가" 를 기록으로 채운다.
+   연결선은 목표가 아니라, 가설이 검증되면 시스템이 자동으로 정리해 주는 결과다. */
 
-interface Thread {
-  id: string;
-  y1: number;
-  y2: number;
-  depth: number;
+function statusOf(def: EvidenceDef, game: ReturnType<typeof useGame>["game"], usedIds: Set<EvidenceId>): EvidenceStatus {
+  if (!game.evidenceCollected.includes(def.id)) return "locked";
+  if (usedIds.has(def.id)) return "used";
+  if (def.unresolved) return "unresolved";
+  if (game.evidenceReviewed.includes(def.id)) return "reviewed";
+  return "unreviewed";
 }
 
-function CaseFile({ caseId }: { caseId: CaseId }) {
+const STATUS_LABEL: Record<EvidenceStatus, string> = {
+  locked: "NOT ON RECORD",
+  unreviewed: "UNREVIEWED",
+  reviewed: "REVIEWED",
+  unresolved: "UNRESOLVED",
+  used: "USED IN HYPOTHESIS",
+};
+
+export function NotebookScene() {
   const { game, dispatch, fx } = useGame();
-  const def = caseById(caseId);
-  const closed = game.casesClosed.includes(caseId);
-  const [selected, setSelected] = useState<EvidenceId[]>([]);
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const listRef = useRef<HTMLUListElement>(null);
-  const rowRefs = useRef<Map<EvidenceId, HTMLLIElement>>(new Map());
+  const activeCase = caseById("case00");
+  const hypotheses = hypothesesForCase("case00");
+  const hyp = hypotheses[0];
 
-  const rows = def.evidenceIds.map((id) => evidenceById(id)).filter((e) => e !== undefined);
+  const [openId, setOpenId] = useState<EvidenceId | null>(null);
+  const [assigning, setAssigning] = useState<EvidenceId | null>(null);
+  const [review, setReview] = useState(false);
+  const [crossRef, setCrossRef] = useState<EvidenceId | null>(null);
 
-  const measure = useCallback(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const base = list.getBoundingClientRect();
-    const next: Thread[] = [];
-    RELATIONS.filter((r) => r.caseId === caseId && game.relationsConfirmed.includes(r.id)).forEach((r, i) => {
-      const a = rowRefs.current.get(r.pair[0]);
-      const b = rowRefs.current.get(r.pair[1]);
-      if (!a || !b) return;
-      const ra = a.getBoundingClientRect();
-      const rb = b.getBoundingClientRect();
-      next.push({
-        id: r.id,
-        y1: ra.top - base.top + ra.height / 2,
-        y2: rb.top - base.top + rb.height / 2,
-        depth: i,
-      });
-    });
-    setThreads(next);
-  }, [caseId, game.relationsConfirmed]);
+  const confirmed = game.hypothesesConfirmed.includes(hyp.id);
+  const ready = hypothesisSatisfied(hyp, game.hypothesisSlots);
+  const available = hypothesisAvailable(hyp, game.evidenceCollected);
 
-  useLayoutEffect(() => { measure(); }, [measure]);
+  const usedIds = useMemo(() => {
+    const set = new Set<EvidenceId>();
+    for (const s of hyp.slots) {
+      const id = game.hypothesisSlots[slotKey(hyp.id, s.id)];
+      if (id) set.add(id);
+    }
+    return set;
+  }, [game.hypothesisSlots, hyp]);
 
-  useEffect(() => {
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [measure]);
+  const rows = activeCase.evidenceIds
+    .map((id) => evidenceById(id))
+    .filter((e): e is EvidenceDef => Boolean(e));
 
-  const toggle = (id: EvidenceId, unlocked: boolean) => {
+  const openEvidence = (def: EvidenceDef, unlocked: boolean) => {
     if (!unlocked) {
       fx("deny", "deny");
-      dispatch({ type: "room/inspect", id: `note-${id}`, log: "NOT ON RECORD YET." });
+      dispatch({ type: "room/inspect", id: `note-${def.id}`, log: "NOT ON RECORD YET." });
       return;
     }
     fx("tap", "touch");
-    setSelected((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 2) return [prev[1], id];
-      return [...prev, id];
-    });
+    setOpenId(openId === def.id ? null : def.id);
+    setCrossRef(null);
+    dispatch({ type: "note/review", id: def.id });
   };
 
-  const test = () => {
-    if (selected.length !== 2) return;
-    const [a, b] = selected;
+  const assignTo = (slotId: string) => {
+    if (!assigning) return;
+    const evidenceId = assigning;
+    const slot = hyp.slots.find((s) => s.id === slotId);
+    const ok = slot ? slot.accepts.includes(evidenceId) : false;
+    fx(ok ? "record" : "deny", ok ? "clue" : "deny");
+    dispatch({ type: "note/assign", hypothesisId: hyp.id, slotId, evidenceId });
+    setAssigning(null);
+    setOpenId(null);
+  };
+
+  const testPair = (a: EvidenceId, b: EvidenceId) => {
     const rel = findRelation(a, b);
-    if (rel && !game.relationsConfirmed.includes(rel.id)) fx("record", "clue");
-    else fx("deny", "deny");
+    fx(rel && !game.relationsConfirmed.includes(rel.id) ? "record" : "deny", rel ? "clue" : "deny");
     dispatch({ type: "note/test", a, b });
-    setSelected([]);
+    setCrossRef(null);
   };
 
-  const confirmed = RELATIONS.filter((r) => r.caseId === caseId && game.relationsConfirmed.includes(r.id));
+  const establishedRelations = RELATIONS.filter((r) => game.relationsConfirmed.includes(r.id));
 
-  return (
-    <section className="r0-file" data-closed={closed ? "true" : undefined}>
-      <header className="r0-file__head">
-        <span className="r0-file__no">CASE {def.index}</span>
-        <h2 className="r0-file__title">{def.title}</h2>
-        <p className="r0-file__q">{def.question}</p>
-        <span className="r0-file__status">{closed ? "CLOSED" : def.id === game.currentCase ? "OPEN" : "PENDING"}</span>
-      </header>
-
-      <div className="r0-file__body">
-        <svg className="r0-file__threads" aria-hidden>
-          {threads.map((t) => (
-            <path
-              key={t.id}
-              d={`M 22 ${t.y1} C ${6 - t.depth * 3} ${t.y1}, ${6 - t.depth * 3} ${t.y2}, 22 ${t.y2}`}
-              className="r0-file__thread"
-            />
-          ))}
-        </svg>
-
-        <ul className="r0-file__list" ref={listRef}>
-          {rows.map((ev, i) => {
-            const unlocked = game.evidenceCollected.includes(ev.id);
-            const linked = confirmed.some((r) => r.pair.includes(ev.id));
-            return (
-              <li
-                key={ev.id}
-                ref={(el) => {
-                  if (el) rowRefs.current.set(ev.id, el);
-                  else rowRefs.current.delete(ev.id);
-                }}
-                className="r0-rec"
-                data-locked={!unlocked ? "true" : undefined}
-                data-selected={selected.includes(ev.id) ? "true" : undefined}
-                data-linked={linked ? "true" : undefined}
-              >
-                <button
-                  type="button"
-                  className="r0-rec__hit"
-                  onClick={() => toggle(ev.id, unlocked)}
-                  aria-pressed={selected.includes(ev.id)}
-                  aria-label={unlocked ? `${ev.label} ${ev.code}` : "미확인 기록"}
-                >
-                  <span className="r0-rec__idx">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="r0-rec__main">
-                    <span className="r0-rec__label">{unlocked ? ev.label : "———————"}</span>
-                    <span className="r0-rec__code">{unlocked ? ev.code : "NOT ON RECORD"}</span>
-                    <span className="r0-rec__source">{unlocked ? ev.source : "SEALED"}</span>
-                    {unlocked && <span className="r0-rec__note">{ev.note}</span>}
-                  </span>
-                  <span className="r0-rec__pick" aria-hidden>
-                    {selected.includes(ev.id) ? "◼" : unlocked ? "◻" : "▨"}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      <div className="r0-file__test">
-        <p className="r0-file__testHint">
-          {selected.length === 0
-            ? "기록 두 건을 골라 관계를 시험한다."
-            : selected.length === 1
-              ? "한 건 더 고른다."
-              : "두 건이 선택됐다."}
-        </p>
-        <button type="button" className="r0-file__testBtn" disabled={selected.length !== 2} onClick={test}>
-          TEST CONNECTION
-        </button>
-      </div>
-
-      {confirmed.length > 0 && (
-        <div className="r0-file__links">
-          <h3 className="r0-file__linksHead">ESTABLISHED — {confirmed.length}/{def.relationIds.length}</h3>
-          {confirmed.map((r) => (
-            <p key={r.id} className="r0-file__link">
-              <span className="r0-file__linkPair">
-                {evidenceById(r.pair[0])?.code} ↔ {evidenceById(r.pair[1])?.code}
-              </span>
-              {r.deduction}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {closed && (
-        <p className="r0-file__seal">CASE {def.index} CLOSED — FILE FORWARDED TO NIGHT MANAGER</p>
-      )}
-    </section>
-  );
-}
-
-export function NotebookScene() {
-  const { game } = useGame();
-  const case00Closed = game.casesClosed.includes("case00");
-  const nextCase = caseById("case01");
-  const hasExt = game.evidenceCollected.includes("ext-3317");
+  /* 이 사건의 가설로는 설명되지 않는, 다음 조사로 넘어가는 기록 */
+  const held = EVIDENCE.filter((e) => e.caseId !== "case00" && game.evidenceCollected.includes(e.id));
 
   return (
     <div className="r0-scene r0-scene--note">
       <div className="r0-note">
         <div className="r0-note__head">
           <span>INVESTIGATION RECORD</span>
-          <span>{game.evidenceCollected.length} / {EVIDENCE.length} FILED</span>
+          <span>
+            {game.evidenceCollected.length} / {EVIDENCE.length} FILED
+          </span>
         </div>
 
-        <CaseFile caseId="case00" />
+        {/* ── 사건과 지금 묻고 있는 것 ───────────────────────────── */}
+        <section className="r0-case">
+          <span className="r0-case__no">CASE {activeCase.index}</span>
+          <h2 className="r0-case__title">{activeCase.title}</h2>
+          <span className="r0-case__status" data-confirmed={confirmed ? "true" : undefined}>
+            {confirmed ? "HYPOTHESIS SUPPORTED" : "OPEN"}
+          </span>
 
-        {(case00Closed || hasExt) && (
-          <section className="r0-file r0-file--next">
-            <header className="r0-file__head">
-              <span className="r0-file__no">CASE {nextCase.index}</span>
-              <h2 className="r0-file__title">{nextCase.title}</h2>
-              <p className="r0-file__q">{nextCase.question}</p>
-              <span className="r0-file__status">{case00Closed ? "OPEN" : "PENDING"}</span>
+          <p className="r0-case__ask">ACTIVE QUESTION</p>
+          <p className="r0-case__question">{hyp.question}</p>
+          <p className="r0-case__questionKo">{hyp.questionKo}</p>
+        </section>
+
+        {/* ── 가설 작업 공간 ──────────────────────────────────── */}
+        <section className="r0-hyp" data-confirmed={confirmed ? "true" : undefined}>
+          <header className="r0-hyp__head">
+            <span>HYPOTHESIS</span>
+            <span className="r0-hyp__count">
+              {hyp.slots.filter((s) => game.hypothesisSlots[slotKey(hyp.id, s.id)]).length}/{hyp.slots.length}
+            </span>
+          </header>
+
+          {!available ? (
+            <p className="r0-hyp__empty">기록이 더 필요하다. 아직 세울 수 있는 가설이 없다.</p>
+          ) : (
+            <ol className="r0-hyp__slots">
+              {hyp.slots.map((slot) => {
+                const placedId = game.hypothesisSlots[slotKey(hyp.id, slot.id)];
+                const placed = placedId ? evidenceById(placedId) : undefined;
+                const targeting = Boolean(assigning);
+                return (
+                  <li key={slot.id} className="r0-slot" data-filled={placed ? "true" : undefined} data-target={targeting ? "true" : undefined}>
+                    <button
+                      type="button"
+                      className="r0-slot__hit"
+                      disabled={confirmed && !placed}
+                      onClick={() => {
+                        if (assigning) {
+                          assignTo(slot.id);
+                          return;
+                        }
+                        if (placed && !confirmed) {
+                          fx("tap", "touch");
+                          dispatch({ type: "note/unassign", hypothesisId: hyp.id, slotId: slot.id });
+                        }
+                      }}
+                    >
+                      <span className="r0-slot__label">{slot.label}</span>
+                      {placed ? (
+                        <span className="r0-slot__entry">
+                          <EvidenceMark def={placed} />
+                          <span className="r0-slot__entryText">
+                            <span className="r0-slot__code">{placed.code}</span>
+                            <span className="r0-slot__src">{placed.label}</span>
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="r0-slot__ask">{targeting ? "여기에 넣기" : slot.ask}</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+
+          {assigning && (
+            <p className="r0-hyp__prompt">
+              {evidenceById(assigning)?.code} — 어느 칸의 근거인가?
+              <button type="button" className="r0-hyp__cancel" onClick={() => { fx("tap", "touch"); setAssigning(null); }}>
+                취소
+              </button>
+            </p>
+          )}
+
+          {!confirmed && available && (
+            <button
+              type="button"
+              className="r0-hyp__review"
+              disabled={!ready}
+              onClick={() => {
+                fx("tap", "touch");
+                setReview(true);
+              }}
+            >
+              REVIEW HYPOTHESIS
+            </button>
+          )}
+
+          {confirmed && (
+            <div className="r0-hyp__result">
+              <p className="r0-hyp__statement">{hyp.statement}</p>
+              <p className="r0-hyp__statementKo">{hyp.statementKo}</p>
+            </div>
+          )}
+        </section>
+
+        {/* ── 검증된 사건 파일 ─────────────────────────────────── */}
+        {confirmed && (
+          <section className="r0-summary">
+            <header className="r0-summary__head">
+              CASE {activeCase.index} — {activeCase.title}
             </header>
-            <p className="r0-file__teaser">{nextCase.teaser}</p>
-            {hasExt && (
-              <p className="r0-file__teaser r0-file__teaser--rec">
-                EXTENSION 3317 — STAMPED UNDER THE TELEPHONE DIAL IN 504.
+            <p className="r0-summary__label">FINDING</p>
+            {hyp.finding.map((line) => (
+              <p key={line} className="r0-summary__line">
+                {line}
               </p>
+            ))}
+            <p className="r0-summary__label">STATUS</p>
+            <p className="r0-summary__status">{hyp.status}</p>
+
+            {establishedRelations.length > 0 && (
+              <>
+                <p className="r0-summary__label">SUPPORTING RELATIONS</p>
+                {establishedRelations.map((r) => (
+                  <p key={r.id} className="r0-summary__rel">
+                    <span>
+                      {evidenceById(r.pair[0])?.code} ↔ {evidenceById(r.pair[1])?.code}
+                    </span>
+                    {r.deduction}
+                  </p>
+                ))}
+              </>
             )}
-            <p className="r0-file__teaser r0-file__teaser--dim">
-              이 사건은 다음 조사에서 열린다.
+          </section>
+        )}
+
+        {/* ── 기록철 ──────────────────────────────────────────── */}
+        <section className="r0-file">
+          <header className="r0-file__head">
+            <span className="r0-file__no">EVIDENCE</span>
+            <span className="r0-file__hint">기록을 눌러 펼친다</span>
+          </header>
+
+          <ul className="r0-file__list">
+            {rows.map((ev, i) => {
+              const status = statusOf(ev, game, usedIds);
+              const unlocked = status !== "locked";
+              const open = openId === ev.id;
+              return (
+                <li key={ev.id} className="r0-rec" data-status={status} data-open={open ? "true" : undefined}>
+                  <button
+                    type="button"
+                    className="r0-rec__hit"
+                    aria-expanded={open}
+                    aria-label={unlocked ? `${ev.label} ${ev.code}` : "미확인 기록"}
+                    onClick={() => openEvidence(ev, unlocked)}
+                  >
+                    <span className="r0-rec__idx">{String(i + 1).padStart(2, "0")}</span>
+                    <EvidenceMark def={ev} locked={!unlocked} />
+                    <span className="r0-rec__main">
+                      <span className="r0-rec__label">{unlocked ? ev.label : "———————"}</span>
+                      <span className="r0-rec__code">{unlocked ? ev.code : "SEALED"}</span>
+                      <span className="r0-rec__src">{unlocked ? ev.source : ""}</span>
+                    </span>
+                    <span className="r0-rec__status">{STATUS_LABEL[status]}</span>
+                  </button>
+
+                  {open && unlocked && (
+                    <div className="r0-rec__body">
+                      <p className="r0-rec__note">{ev.note}</p>
+                      <div className="r0-rec__acts">
+                        {!confirmed && (
+                          <button
+                            type="button"
+                            className="r0-rec__act"
+                            onClick={() => {
+                              fx("tap", "touch");
+                              setAssigning(ev.id);
+                              setOpenId(null);
+                            }}
+                          >
+                            ADD TO HYPOTHESIS
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="r0-rec__act r0-rec__act--mute"
+                          onClick={() => {
+                            fx("tap", "touch");
+                            setCrossRef(crossRef === ev.id ? null : ev.id);
+                          }}
+                        >
+                          CROSS-REFERENCE
+                        </button>
+                      </div>
+
+                      {crossRef === ev.id && (
+                        <div className="r0-xref">
+                          <p className="r0-xref__ask">어느 기록과 대조하는가</p>
+                          <div className="r0-xref__list">
+                            {rows
+                              .filter((o) => o.id !== ev.id && game.evidenceCollected.includes(o.id))
+                              .map((o) => (
+                                <button key={o.id} type="button" className="r0-xref__item" onClick={() => testPair(ev.id, o.id)}>
+                                  {o.code}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          {held.length > 0 && (
+            <div className="r0-held">
+              <p className="r0-held__label">HELD FOR NEXT INVESTIGATION</p>
+              {held.map((ev) => (
+                <div key={ev.id} className="r0-held__row">
+                  <EvidenceMark def={ev} />
+                  <span className="r0-held__main">
+                    <span className="r0-held__code">{ev.code}</span>
+                    <span className="r0-held__label2">{ev.label}</span>
+                  </span>
+                  <span className="r0-held__status">UNRESOLVED</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── 남은 질문 ───────────────────────────────────────── */}
+        {confirmed && (
+          <section className="r0-open">
+            <p className="r0-open__label">OPEN QUESTION</p>
+            <p className="r0-open__q">{hyp.followupQuestion}</p>
+            <p className="r0-open__qKo">{hyp.followupQuestionKo}</p>
+            <p className="r0-open__note">
+              KEY INDEX 5F — 3317 NOT ISSUED. 이 조사는 여기서 멈춘다.
             </p>
           </section>
         )}
       </div>
+
+      {/* ── 가설 최종 확인 ─────────────────────────────────────── */}
+      {review && (
+        <div className="r0-detail" role="dialog" aria-modal="true" aria-label="가설 검토">
+          <div className="r0-detail__scrim" onClick={() => setReview(false)} />
+          <div className="r0-detail__stage r0-detail__stage--wide">
+            <div className="r0-verify">
+              <p className="r0-verify__label">HYPOTHESIS</p>
+              <p className="r0-verify__statement">{hyp.statement}</p>
+              <p className="r0-verify__statementKo">{hyp.statementKo}</p>
+
+              <p className="r0-verify__label">SUPPORTED BY</p>
+              <ul className="r0-verify__list">
+                {hyp.slots.map((s) => {
+                  const id = game.hypothesisSlots[slotKey(hyp.id, s.id)];
+                  const def = id ? evidenceById(id) : undefined;
+                  return (
+                    <li key={s.id}>
+                      <span className="r0-verify__slot">{s.label}</span>
+                      <span className="r0-verify__code">{def?.code ?? "—"}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="r0-verify__acts">
+                <button
+                  type="button"
+                  className="r0-verify__confirm"
+                  onClick={() => {
+                    fx("recover", "recover");
+                    dispatch({ type: "note/confirm", hypothesisId: hyp.id });
+                    setReview(false);
+                  }}
+                >
+                  CONFIRM
+                </button>
+                <button type="button" className="r0-verify__back" onClick={() => { fx("tap", "touch"); setReview(false); }}>
+                  RETURN TO EVIDENCE
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
