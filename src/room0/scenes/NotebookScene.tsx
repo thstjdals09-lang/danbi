@@ -49,14 +49,11 @@ function CaseBlock({ caseId }: { caseId: CaseId }) {
   const ready = hypothesisSatisfied(hyp, game.hypothesisSlots);
   const available = hypothesisAvailable(hyp, game.evidenceCollected);
 
-  const usedIds = useMemo(() => {
-    const set = new Set<EvidenceId>();
-    for (const s of hyp.slots) {
-      const id = game.hypothesisSlots[slotKey(hyp.id, s.id)];
-      if (id) set.add(id);
-    }
-    return set;
-  }, [game.hypothesisSlots, hyp]);
+  /* 어느 사건의 가설이든 채택된 기록은 USED 로 표시한다 */
+  const usedIds = useMemo(
+    () => new Set<EvidenceId>(Object.values(game.hypothesisSlots)),
+    [game.hypothesisSlots],
+  );
 
   const rows = activeCase.evidenceIds
     .map((id) => evidenceById(id))
@@ -387,6 +384,7 @@ export function NotebookScene() {
   /* 도달한 사건만 기록철에 나타난다 */
   const cases: CaseId[] = ["case00"];
   if (game.frontDeskUnlocked || game.casesClosed.includes("case00")) cases.push("case01");
+  if (game.archiveUnlocked || game.casesClosed.includes("case01")) cases.push("case02");
 
   return (
     <div className="r0-scene r0-scene--note">

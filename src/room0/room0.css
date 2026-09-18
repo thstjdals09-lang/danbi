@@ -1571,3 +1571,123 @@
 /* 도면 위의 작은 표시 */
 .r0-plan__gf { fill: var(--brass-dim); font-size: 7px; letter-spacing: 0.14em; text-anchor: middle; }
 .r0-plan__ring { fill: var(--alert); font-size: 9px; letter-spacing: 0.1em; text-anchor: middle; animation: r0-blink 1.2s steps(1) infinite; }
+
+/* ==========================================================================
+   CASE 02 — NIGHT AUDIT ARCHIVE
+   ========================================================================== */
+
+.r0-arch { width: 100%; border: 1px solid var(--line-2); margin-bottom: 10px; }
+.r0-arch__pick { padding: 10px 12px 14px; }
+.r0-arch__label {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 8.5px;
+  letter-spacing: 0.3em;
+  color: var(--faint);
+}
+.r0-arch__label:first-child { margin-top: 0; }
+.r0-arch__row { display: flex; flex-wrap: wrap; gap: 6px; }
+.r0-arch__chip {
+  min-height: 44px;
+  min-width: 52px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  background: var(--panel);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+.r0-arch__chip[data-on="true"] { color: var(--text); border-color: var(--brass-dim); background: var(--panel-2); }
+.r0-arch__chip[data-seen="true"] { color: var(--faint); border-style: dashed; }
+
+.r0-audit__summary { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.r0-audit__summary p {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
+.r0-audit__summary p:last-child { margin-bottom: 0; }
+.r0-audit__summary span { font-size: 8.5px; letter-spacing: 0.2em; color: var(--faint); }
+
+.r0-doc__no--time { font-variant-numeric: tabular-nums; letter-spacing: 0.1em; }
+.r0-doc__row[data-seen="true"] .r0-doc__no { color: var(--faint); }
+
+/* 기록 한 줄의 상세 */
+.r0-field { margin: 0; padding: 12px; }
+.r0-field > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.r0-field dt { font-size: 8.5px; letter-spacing: 0.2em; color: var(--faint); }
+.r0-field dd { margin: 0; font-size: 13px; letter-spacing: 0.12em; color: var(--text); }
+.r0-field dd[data-redacted="true"] { color: var(--faint); letter-spacing: 0.06em; }
+.r0-field__note {
+  margin: 10px 0 0;
+  font-size: 9px;
+  line-height: 1.6;
+  letter-spacing: 0.12em;
+  color: var(--alert);
+}
+
+/* 객실 목록 스냅샷 */
+.r0-snap { padding: 12px; }
+.r0-snap__head { margin: 0 0 8px; font-size: 8.5px; letter-spacing: 0.26em; color: var(--faint); }
+.r0-snap__rooms { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.r0-snap__rooms span {
+  min-width: 52px;
+  padding: 9px 0;
+  text-align: center;
+  border: 1px solid var(--line-2);
+  background: #15180f;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--brass);
+}
+.r0-snap__total {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--text);
+}
+.r0-snap__total span { font-size: 8.5px; letter-spacing: 0.2em; color: var(--faint); align-self: center; }
+
+/* 출력물 */
+.r0-sheetshot { width: 100%; border: 1px solid var(--line-2); }
+.r0-sheetshot__line {
+  position: absolute;
+  left: 20%;
+  top: 41%;
+  font-size: 2.1cqw;
+  letter-spacing: 0.04em;
+  color: #3a3427;
+  pointer-events: none;
+}
+.r0-sheetshot__src {
+  position: absolute;
+  left: 20%;
+  top: 50%;
+  font-size: 2.1cqw;
+  letter-spacing: 0.04em;
+  color: #3a3427;
+  pointer-events: none;
+}
+.r0-sheetshot__hand {
+  position: absolute;
+  left: 58%;
+  top: 47%;
+  transform: rotate(-7deg);
+  font-family: "Bradley Hand", "Segoe Script", cursive, var(--mono);
+  font-size: 3.4cqw;
+  color: #2b3a52;
+  pointer-events: none;
+}

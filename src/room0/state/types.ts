@@ -148,7 +148,10 @@ export type Stage =
   | "CASE_01_PATTERN"
   | "CASE_01_RINGING"
   | "CASE_01_ANSWERED"
-  | "CASE_01_CLOSED";
+  | "CASE_01_CLOSED"
+  | "CASE_02_OPEN"
+  | "CASE_02_ENTRY"
+  | "CASE_02_CLOSED";
 
 export interface GameState {
   schemaVersion: number;
@@ -184,6 +187,15 @@ export interface GameState {
   dialed: string[];
   phoneRinging: boolean;
   phoneAnswered: boolean;
+
+  /* CASE 02 진행 플래그 */
+  archiveUnlocked: boolean;
+  /* 열어 본 감사 기록 날짜 (예: "1987-OCT-17") */
+  auditDatesOpened: string[];
+  entry0213Seen: boolean;
+  snap0212Seen: boolean;
+  snap0214Seen: boolean;
+  auditSheetFound: boolean;
 
   /* 누적 기록 */
   evidenceCollected: EvidenceId[];

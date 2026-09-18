@@ -120,6 +120,33 @@ export const HINTS: HintSet[] = [
       "여기서 조사는 멈춘다. 다음 기록이 열릴 때까지.",
     ],
   },
+  {
+    stage: "CASE_02_OPEN",
+    heading: "오래된 기록",
+    steps: [
+      "프런트 카운터 아래의 보관 서랍이 열려 있다.",
+      "노트에 아직 UNRESOLVED 로 남은 기록 두 개가 언제를 가리키는지 다시 읽어 보라.",
+      "그 날짜의 야간 감사 기록을 서랍에서 찾아 꺼내라.",
+    ],
+  },
+  {
+    stage: "CASE_02_ENTRY",
+    heading: "그날 밤",
+    steps: [
+      "그 시각의 기록만 보지 말고 앞뒤 1분도 열어 보라.",
+      "객실 목록의 개수가 몇에서 몇으로 바뀌었는지 직접 세어 보라.",
+      "SOURCE 칸이 비어 있다면 디지털 사본이 아니라 출력물을 확인하라.",
+    ],
+  },
+  {
+    stage: "CASE_02_CLOSED",
+    heading: "CASE 02 종결",
+    steps: [
+      "삭제된 시각은 확인됐다. 지운 주체는 아직 값 하나로만 남아 있다.",
+      "그 값은 디지털 사본에서 빠져 있었고 출력물에만 찍혀 있었다.",
+      "여기서 조사는 멈춘다.",
+    ],
+  },
 ];
 
 export function hintsForStage(stage: Stage): HintSet | undefined {

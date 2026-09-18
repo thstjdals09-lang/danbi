@@ -5,12 +5,13 @@ import { useGame } from "@/room0/state/GameProvider";
 import { SCENE_ASSETS, asset } from "@/room0/assets";
 import { Hotspot, SceneImage } from "@/room0/components/SceneImage";
 import { roomTone } from "@/room0/fx/audio";
+import { ArchiveScene } from "@/room0/scenes/ArchiveScene";
 
 /* FRONT DESK / GF — CASE 01 의 무대.
    실제 프런트 사진 한 장 위에 조사 대상이 놓여 있고,
    열쇠함 · 전화기는 PHYSICAL, 키 기록 · 교환대 배선표는 SYSTEM 으로 펼쳐진다. */
 
-type Panel = null | "keylog" | "cabinet" | "routing" | "phone";
+type Panel = null | "keylog" | "cabinet" | "routing" | "phone" | "archive";
 
 /* 오래된 반납 기록. 3317 을 눈에 띄게 배치하지 않는다. */
 const KEY_LOG: { id: string; label: string; state: string; odd?: boolean }[] = [
@@ -138,6 +139,14 @@ export function FrontDeskScene() {
             open(null, "THE BELL STILL WORKS. NOBODY COMES.")
           }
         />
+        {game.archiveUnlocked && (
+          <Hotspot
+            x={22} y={74} w={34} h={16}
+            label="보관 서랍"
+            seen={game.auditDatesOpened.length > 0}
+            onActivate={() => open("archive")}
+          />
+        )}
         {game.phoneRinging && <span className="r0-desk__signal" aria-hidden />}
       </SceneImage>
 
@@ -146,6 +155,8 @@ export function FrontDeskScene() {
           RING SIGNAL DETECTED — SOURCE NOT AT THIS DESK.
         </p>
       )}
+
+      {panel === "archive" && <ArchiveScene onClose={() => setPanel(null)} />}
 
       {/* ── KEY CONTROL / LEGACY LOG (SYSTEM) ───────────────── */}
       {panel === "keylog" && (

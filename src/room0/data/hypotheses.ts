@@ -92,6 +92,49 @@ export const HYPOTHESES: HypothesisDef[] = [
     followupQuestion: "WHY DOES THE SWITCHBOARD REMEMBER A ROOM THE PROPERTY RECORD FORGOT?",
     followupQuestionKo: "건물 기록은 504호를 잊었는데, 왜 교환기는 아직 기억하고 있는가?",
   },
+  {
+    id: "hyp-case02",
+    caseId: "case02",
+    guidance: "open",
+    question: "WHEN WAS ROOM 504 REMOVED?",
+    questionKo: "504호는 언제 기록에서 사라졌는가?",
+    slots: [
+      {
+        id: "date",
+        label: "DATE",
+        ask: "",
+        askKo: "",
+        accepts: ["photo-1987", "audit-1017"],
+        reject: "THIS ENTRY DOES NOT FIX A DATE.",
+      },
+      {
+        id: "time",
+        label: "TIME",
+        ask: "",
+        askKo: "",
+        accepts: ["clock-0213", "rebuild-0213"],
+        reject: "THIS ENTRY DOES NOT FIX A TIME.",
+      },
+      {
+        id: "change",
+        label: "CHANGE",
+        ask: "",
+        askKo: "",
+        accepts: ["index-0212", "index-0214"],
+        reject: "NOTHING HERE RECORDS THE CHANGE ITSELF.",
+      },
+    ],
+    statement: "ROOM 504 WAS REMOVED FROM THE PROPERTY INDEX AT 02:13 ON OCTOBER 17, 1987.",
+    statementKo: "504호는 1987년 10월 17일 02:13 에 호텔 PROPERTY INDEX 에서 삭제되었다.",
+    finding: [
+      "At 02:13 on October 17, 1987, the property index changed from 68 units to 67.",
+      "Sector 5W / Offset 0504 was removed during the rebuild.",
+      "The switchboard and the room itself were never told.",
+    ],
+    status: "REMOVAL EVENT CONFIRMED",
+    followupQuestion: "WHAT IS MGR-01?",
+    followupQuestionKo: "MGR-01 은 무엇인가?",
+  },
 ];
 
 const BY_ID = new Map<HypothesisId, HypothesisDef>(HYPOTHESES.map((h) => [h.id, h]));

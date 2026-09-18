@@ -33,6 +33,12 @@ export const RELATIONS: RelationDef[] = [
     caseId: "case01",
     deduction: "THE GAP IN THE ROUTING TABLE AND THE CONNECTED LINE POINT AT THE SAME ROOM.",
   },
+  {
+    id: "rel-date-time",
+    pair: ["photo-1987", "rebuild-0213"],
+    caseId: "case02",
+    deduction: "THE DATE ON THE PRINT AND THE MINUTE OF THE REBUILD BELONG TO THE SAME NIGHT.",
+  },
 ];
 
 export function findRelation(a: EvidenceId, b: EvidenceId): RelationDef | undefined {

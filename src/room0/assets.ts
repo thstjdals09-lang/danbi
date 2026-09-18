@@ -125,6 +125,26 @@ export const SCENE_ASSETS: Record<string, SceneAsset> = {
       "어두운 객실의 나무 협탁 위에 놓인 베이지색 유선 전화기 클로즈업. 수화기는 거치대에 있고 코드가 " +
       "늘어져 있다. 줄무늬 벽지, 측면에서 들어오는 약한 빛, 먼지.",
   },
+  drawer: {
+    id: "drawer",
+    file: "archive/drawer.webp",
+    ratio: 4 / 3,
+    use: "프런트 뒤 보관 서랍 — NIGHT AUDIT ARCHIVE 의 입구.",
+    size: "1400 x 1050 (4:3)",
+    brief:
+      "1980년대 호텔 프런트 아래에서 꺼낸 나무 서랍 클로즈업. 누런 서류철이 빽빽하게 세워져 있고 " +
+      "위쪽 탭에는 빈 라벨 홀더가 달려 있다. 따뜻한 텅스텐 측광, 먼지, 얕은 심도. 글자는 없다.",
+  },
+  auditSheet: {
+    id: "auditSheet",
+    file: "archive/audit-sheet.webp",
+    ratio: 4 / 3,
+    use: "OCT 17 1987 야간 감사 출력물. 디지털 사본에 없는 SOURCE 칸이 여기 찍혀 있다.",
+    size: "1400 x 1050 (4:3)",
+    brief:
+      "도트 매트릭스로 인쇄된 오래된 연속 용지. 연녹색 줄무늬, 양쪽 스프로킷 구멍, 가운데 접힌 자국, " +
+      "누렇게 변색, 커피 자국. 인쇄된 줄은 흐릿하게 (읽히는 글자는 코드가 얹는다).",
+  },
   clockMark: {
     id: "clockMark",
     file: "504/clock-mark.webp",

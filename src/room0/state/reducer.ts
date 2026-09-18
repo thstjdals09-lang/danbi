@@ -37,6 +37,13 @@ export const INITIAL_GAME: GameState = {
   phoneRinging: false,
   phoneAnswered: false,
 
+  archiveUnlocked: false,
+  auditDatesOpened: [],
+  entry0213Seen: false,
+  snap0212Seen: false,
+  snap0214Seen: false,
+  auditSheetFound: false,
+
   evidenceCollected: [],
   evidenceReviewed: [],
   hypothesisSlots: {},
@@ -95,6 +102,11 @@ export type Action =
   | { type: "desk/routing" }
   | { type: "desk/dial"; number: string }
   | { type: "room/answerPhone" }
+  | { type: "archive/openDate"; date: string }
+  | { type: "archive/entry"; id: string; log: string }
+  | { type: "archive/rebuild" }
+  | { type: "archive/snapshot"; at: "0212" | "0214" }
+  | { type: "archive/sheet" }
   | { type: "note/review"; id: EvidenceId }
   | { type: "note/assign"; hypothesisId: HypothesisId; slotId: string; evidenceId: EvidenceId }
   | { type: "note/unassign"; hypothesisId: HypothesisId; slotId: string }
@@ -357,6 +369,63 @@ export function reducer(state: Room0State, action: Action): Room0State {
       return grant(next, next.game, "line-3317");
     }
 
+    /* ── NIGHT AUDIT ARCHIVE ────────────────────────── */
+
+    case "archive/openDate": {
+      const opened = g.auditDatesOpened.includes(action.date)
+        ? g.auditDatesOpened
+        : [...g.auditDatesOpened, action.date];
+      let next: Room0State = {
+        ...state,
+        game: { ...g, auditDatesOpened: opened },
+        log: pushLog(state, `NIGHT AUDIT ${action.date.replace(/-/g, " ")} — RETRIEVED.`, "sys"),
+      };
+      if (action.date === "1987-OCT-17") next = grant(next, next.game, "audit-1017");
+      return next;
+    }
+
+    case "archive/entry":
+      return {
+        ...state,
+        game: g.inspected.includes(action.id) ? g : { ...g, inspected: [...g.inspected, action.id] },
+        log: pushLog(state, action.log, "sys"),
+      };
+
+    case "archive/rebuild": {
+      if (g.entry0213Seen) return state;
+      const next: Room0State = {
+        ...state,
+        game: { ...g, entry0213Seen: true },
+        log: pushLog(state, "PROPERTY INDEX REBUILD — SECTOR 5W / OFFSET 0504. SOURCE FIELD INCOMPLETE.", "alert"),
+      };
+      return grant(next, next.game, "rebuild-0213");
+    }
+
+    case "archive/snapshot": {
+      const key = action.at === "0212" ? "snap0212Seen" : "snap0214Seen";
+      if (g[key]) return state;
+      const next: Room0State = {
+        ...state,
+        game: { ...g, [key]: true },
+        log: pushLog(
+          state,
+          action.at === "0212" ? "PROPERTY INDEX 02:12 — 68 UNITS ON FILE." : "PROPERTY INDEX 02:14 — 67 UNITS ON FILE.",
+          "sys",
+        ),
+      };
+      return grant(next, next.game, action.at === "0212" ? "index-0212" : "index-0214");
+    }
+
+    case "archive/sheet": {
+      if (g.auditSheetFound) return state;
+      const next: Room0State = {
+        ...state,
+        game: { ...g, auditSheetFound: true },
+        log: pushLog(state, "PRINTED COPY — THE SOURCE FIELD IS LEGIBLE HERE.", "alert"),
+      };
+      return grant(next, next.game, "mgr-01");
+    }
+
     case "note/review":
       if (g.evidenceReviewed.includes(action.id)) return state;
       return { ...state, game: { ...g, evidenceReviewed: [...g.evidenceReviewed, action.id] } };
@@ -440,6 +509,8 @@ export function reducer(state: Room0State, action: Action): Room0State {
         currentCase: def.caseId === "case00" ? "case01" : g.currentCase,
         /* CASE 00 이 정리되면 프런트의 옛 기록에 접근할 수 있게 된다 */
         frontDeskUnlocked: def.caseId === "case00" ? true : g.frontDeskUnlocked,
+        /* CASE 01 이 정리되면 그보다 오래된 감사 기록이 열린다 */
+        archiveUnlocked: def.caseId === "case01" ? true : g.archiveUnlocked,
       };
 
       let next: Room0State = { ...state, game, log: pushLog(state, "HYPOTHESIS SUPPORTED.", "record") };
@@ -448,6 +519,9 @@ export function reducer(state: Room0State, action: Action): Room0State {
       next = { ...next, log: pushLog(next, def.followupQuestion, "alert") };
       if (def.caseId === "case00") {
         next = { ...next, log: pushLog(next, "KEY CONTROL ARCHIVE AVAILABLE — FRONT DESK, GF", "alert") };
+      }
+      if (def.caseId === "case01") {
+        next = { ...next, log: pushLog(next, "LEGACY PROPERTY ARCHIVE AVAILABLE — 1984 TO 1992", "alert") };
       }
       return next;
     }
@@ -497,6 +571,9 @@ export function reducer(state: Room0State, action: Action): Room0State {
 /** 기획서 §10 의 상태 머신을 플래그에서 파생한다. */
 export function deriveStage(g: GameState): Stage {
   if (!g.bootCompleted) return "BOOT";
+  if (g.casesClosed.includes("case02")) return "CASE_02_CLOSED";
+  if (g.entry0213Seen) return "CASE_02_ENTRY";
+  if (g.archiveUnlocked) return "CASE_02_OPEN";
   if (g.casesClosed.includes("case01")) return "CASE_01_CLOSED";
   if (g.phoneAnswered) return "CASE_01_ANSWERED";
   if (g.phoneRinging) return "CASE_01_RINGING";

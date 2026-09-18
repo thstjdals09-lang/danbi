@@ -7,12 +7,13 @@ const KEY = "room0.save";
 function migrate(raw: Partial<GameState> & { schemaVersion?: number }): GameState {
   const merged: GameState = { ...INITIAL_GAME, ...raw, schemaVersion: SCHEMA_VERSION };
   // 배열 필드가 손상된 세이브에서도 게임이 깨지지 않도록 방어한다.
-  const arrays = ["evidenceCollected", "evidenceReviewed", "hypothesesConfirmed", "relationsConfirmed", "discoveries", "inspected", "casesClosed", "secrets", "dialed"] as const;
+  const arrays = ["evidenceCollected", "evidenceReviewed", "hypothesesConfirmed", "relationsConfirmed", "discoveries", "inspected", "casesClosed", "secrets", "dialed", "auditDatesOpened"] as const;
   for (const k of arrays) if (!Array.isArray(merged[k])) (merged[k] as unknown as string[]) = [];
   if (typeof merged.hintsUsed !== "object" || merged.hintsUsed === null) merged.hintsUsed = {};
   if (typeof merged.hypothesisSlots !== "object" || merged.hypothesisSlots === null) merged.hypothesisSlots = {};
   /* 예전 세이브에서 CASE 00 을 이미 끝냈다면 프런트 접근을 열어 준다 */
   if (merged.casesClosed.includes("case00")) merged.frontDeskUnlocked = true;
+  if (merged.casesClosed.includes("case01")) merged.archiveUnlocked = true;
   if (merged.currentScene === "boot" || merged.currentScene === "discovery") {
     // 부팅/연출 장면은 복원 대상이 아니다. 진행도에 맞는 장면으로 되돌린다.
     merged.currentScene = merged.room504Entered ? "room504" : "map";

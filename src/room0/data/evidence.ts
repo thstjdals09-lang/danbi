@@ -117,6 +117,54 @@ export const EVIDENCE: EvidenceDef[] = [
     kind: "record",
     note: "회선이 연결된 곳이 기록으로 남았다. 교환기는 이 번호가 어디로 가는지 알고 있었다.",
   },
+
+  /* CASE 02 — 마지막 기록 */
+  {
+    id: "audit-1017",
+    code: "OCT 17, 1987",
+    label: "NIGHT AUDIT",
+    source: "LEGACY PROPERTY ARCHIVE",
+    caseId: "case02",
+    kind: "record",
+    note: "그날 밤의 감사 기록이 통째로 남아 있다. 00:00 마감 개시부터 새벽까지, 한 줄도 빠짐없이.",
+  },
+  {
+    id: "index-0212",
+    code: "68 UNITS",
+    label: "PROPERTY INDEX / 02:12",
+    source: "NIGHT AUDIT OCT 17 1987",
+    caseId: "case02",
+    kind: "record",
+    note: "그 시각의 객실 목록. 5F WEST 는 501 502 503 504 505 506 여섯 칸이다.",
+  },
+  {
+    id: "rebuild-0213",
+    code: "02:13",
+    label: "PROPERTY INDEX REBUILD",
+    source: "SECTOR 5W / OFFSET 0504",
+    caseId: "case02",
+    kind: "record",
+    note: "인덱스를 다시 만든 기록. 대상 구역은 5W, 오프셋은 0504. 결과만 남고 이유는 적혀 있지 않다.",
+  },
+  {
+    id: "index-0214",
+    code: "67 UNITS",
+    label: "PROPERTY INDEX / 02:14",
+    source: "NIGHT AUDIT OCT 17 1987",
+    caseId: "case02",
+    kind: "record",
+    note: "1분 뒤의 객실 목록. 5F WEST 는 501 502 503 505 506 다섯 칸이다.",
+  },
+  {
+    id: "mgr-01",
+    code: "MGR-01",
+    label: "AUDIT SOURCE",
+    source: "PRINTED NIGHT AUDIT / OCT 17 1987",
+    caseId: "case02",
+    kind: "field",
+    unresolved: true,
+    note: "디지털 사본에는 없고 출력물에만 남아 있다. 인쇄된 SOURCE 옆에 같은 값이 손으로 한 번 더 적혀 있다.",
+  },
 ];
 
 const BY_ID = new Map<EvidenceId, EvidenceDef>(EVIDENCE.map((e) => [e.id, e]));
