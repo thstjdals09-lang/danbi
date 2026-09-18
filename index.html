@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0b08" />
+<meta name="color-scheme" content="dark" />
+<meta name="description" content="이 건물에는 존재하지 않는 방이 하나 있다." />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>ROOM 0 — NULL HOTEL</title>
+<link rel="icon" href="data:," />
+<link rel="stylesheet" href="./room0.css" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0a0b08; overscroll-behavior: none; }
+  /* 스크립트가 아직 안 붙었을 때의 최소 화면 — 검은 화면만 남지 않게 한다 */
+  #boot-fallback {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #59604f; background: #0a0b08;
+    font: 12px ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: 0.2em;
+  }
+  #root:not(:empty) + #boot-fallback { display: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="boot-fallback">CONNECTING TO TERMINAL ...</div>
+<noscript><div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#c9cdba;background:#0a0b08;font:13px monospace;letter-spacing:.14em">JAVASCRIPT REQUIRED</div></noscript>
+<script src="./room0.js"></script>
+</body>
+</html>
